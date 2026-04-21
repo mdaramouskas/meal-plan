@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0d0d1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mike's Diet" />
+  <title>Mike's Meal Plan</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d1a;
+      --bg2: #111122;
+      --bg3: #0a1628;
+      --border: #1e1e33;
+      --text: #e8e8e8;
+      --muted: #888;
+      --dim: #444;
+      --accent: #4ecdc4;
+      --gold: #f0a500;
+      --red: #ff6b6b;
+      --blue: #45b7d1;
+      --green: #5cb85c;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 32px;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(180deg, #0a0a18 0%, var(--bg) 100%);
+      padding: 48px 16px 20px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-tag {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .header-sub {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 4px;
+    }
+
+    /* MAIN */
+    .main { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+    /* MACROS CARD */
+    .macros-card {
+      background: var(--bg2);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .card-label {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .macro-item { text-align: center; }
+    .macro-val {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .macro-unit { font-size: 9px; color: var(--dim); margin-top: 2px; }
+    .macro-name { font-size: 9px; color: var(--muted); margin-top: 1px; }
+    .macro-bar-wrap { margin-bottom: 8px; }
+    .macro-bar-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+    .macro-bar-row span:first-child { color: var(--muted); }
+    .bar-bg {
+      background: #1a1a2e;
+      border-radius: 4px;
+      height: 5px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 5px;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+    .target-note {
+      font-size: 10px;
+      color: var(--dim);
+      text-align: center;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .target-note span { color: var(--accent); font-weight: 600; }
+
+    /* DAY SELECTOR */
+    .day-section { margin-bottom: 16px; }
+    .day-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .day-scroll::-webkit-scrollbar { display: none; }
+    .day-btn {
+      min-width: 58px;
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .day-btn.active {
+      border-color: var(--accent);
+      background: #0a2a28;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .day-btn .day-type {
+      font-size: 9px;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+
+    /* MEAL CARDS */
+    .meal-card {
+      background: var(--bg2);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .meal-card.lunch {
+      background: linear-gradient(135deg, #0a2a1a, #0d1a0d);
+      border-color: #1a4a2a;
+    }
+    .meal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 14px 10px;
+      cursor: pointer;
+    }
+    .meal-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .meal-emoji { font-size: 20px; }
+    .meal-name { font-size: 14px; font-weight: 700; color: #ddd; }
+    .meal-card.lunch .meal-name { color: #7ecb9a; }
+    .meal-time { font-size: 10px; color: var(--dim); margin-top: 2px; }
+    .meal-kcal {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gold);
+      background: #1a1500;
+      padding: 5px 10px;
+      border-radius: 8px;
+    }
+    .meal-macros-row {
+      display: flex;
+      gap: 10px;
+      padding: 0 14px 10px;
+    }
+    .meal-macro-chip {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .chip-p { background: #0a2a28; color: var(--accent); }
+    .chip-c { background: #0a1e2a; color: var(--blue); }
+    .chip-f { background: #2a0a0a; color: var(--red); }
+
+    .meal-body { padding: 0 14px 14px; }
+    .ingredients-list { list-style: none; }
+    .ingredient-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    .ingredient-row:last-child { border-bottom: none; }
+    .ing-name { font-size: 12px; color: #ccc; flex: 1; }
+    .ing-right { text-align: right; flex-shrink: 0; }
+    .ing-amount { font-size: 12px; color: #fff; font-weight: 600; }
+    .ing-macros { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+    .lunch-badge {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 9px;
+      background: #1a4a2a;
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+      vertical-align: middle;
+    }
+
+    /* NOTES */
+    .notes-card {
+      background: var(--bg2);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-top: 4px;
+    }
+    .note-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: flex-start;
+    }
+    .note-row:last-child { margin-bottom: 0; }
+    .note-arrow { color: var(--accent); font-size: 12px; margin-top: 1px; flex-shrink: 0; }
+    .note-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">Lean Cut Program</div>
+  <h1>Mike's Meal Plan</h1>
+  <div class="header-sub">174cm · 77kg → 74kg · 4-5x βάρη + ποδόσφαιρο</div>
+</div>
+
+<div class="main">
+
+  <!-- MACROS CARD -->
+  <div class="macros-card">
+    <div class="card-label">Ημερήσια Σύνολα</div>
+    <div class="macro-grid">
+      <div class="macro-item">
+        <div class="macro-val" style="color:#f0a500" id="tot-kcal">0</div>
+        <div class="macro-unit">kcal</div>
+        <div class="macro-name">Θερμίδες</div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-val" style="color:#4ecdc4" id="tot-p">0</div>
+        <div class="macro-unit">g</div>
+        <div class="macro-name">Πρωτεΐνη</div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-val" style="color:#45b7d1" id="tot-c">0</div>
+        <div class="macro-unit">g</div>
+        <div class="macro-name">Υδατ/κες</div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-val" style="color:#ff6b6b" id="tot-f">0</div>
+        <div class="macro-unit">g</div>
+        <div class="macro-name">Λίπος</div>
+      </div>
+    </div>
+    <div class="macro-bar-wrap">
+      <div class="macro-bar-row"><span>Πρωτεΐνη</span><span id="bar-p-lbl" style="color:#4ecdc4">0 / 190g</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar-p" style="background:#4ecdc4;width:0%"></div></div>
+    </div>
+    <div class="macro-bar-wrap">
+      <div class="macro-bar-row"><span>Υδατάνθρακες</span><span id="bar-c-lbl" style="color:#45b7d1">0 / 210g</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar-c" style="background:#45b7d1;width:0%"></div></div>
+    </div>
+    <div class="macro-bar-wrap">
+      <div class="macro-bar-row"><span>Λίπος</span><span id="bar-f-lbl" style="color:#ff6b6b">0 / 60g</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="bar-f" style="background:#ff6b6b;width:0%"></div></div>
+    </div>
+    <div class="target-note">Στόχος: <span>2.150 kcal</span> · <span>190g P</span> · <span>210g C</span> · <span>60g F</span></div>
+  </div>
+
+  <!-- DAY SELECTOR -->
+  <div class="day-section">
+    <div class="card-label" style="margin-bottom:8px">Ημέρα</div>
+    <div class="day-scroll" id="day-scroll"></div>
+  </div>
+
+  <!-- MEALS CONTAINER -->
+  <div id="meals-container"></div>
+
+  <!-- NOTES -->
+  <div class="notes-card">
+    <div class="card-label">💡 Σημειώσεις</div>
+    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">Ημέρα γυμναστικής: φάε τους υδατ/κες (ρύζι/πατάτα) γύρω από την προπόνηση</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">Ημέρα ποδοσφαίρου: +100 kcal extra, καλή ενυδάτωση πριν & μετά</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">Μεσημεριανό: ίδιο με κοπέλα, αναλογίες προσαρμοσμένες για σένα</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">Νερό: τουλάχιστον 3 λίτρα / ημέρα</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">Αν πεινάς πολύ: +100g γιαούρτι 0% ή 1 αυγό βραστό</span></div>
+  </div>
+</div>
+
+<script>
+const DAYS = [
+  { name: "Δευτέρα", short: "ΔΕΥ", type: "🏋️" },
+  { name: "Τρίτη",   short: "ΤΡΙ", type: "🏋️" },
+  { name: "Τετάρτη", short: "ΤΕΤ", type: "⚽" },
+  { name: "Πέμπτη",  short: "ΠΕΜ", type: "🏋️" },
+  { name: "Παρασκευή",short:"ΠΑΡ", type: "🏋️" },
+  { name: "Σάββατο", short: "ΣΑΒ", type: "🚶" },
+  { name: "Κυριακή", short: "ΚΥΡ", type: "🚶" },
+];
+
+// Each day has 4 meals: breakfast, snack, lunch, dinner
+// Each meal has ingredients with: name, amount (g or ml), protein, carbs, fat, kcal
+const PLAN = [
+  // ── ΔΕΥΤΕΡΑ ──
+  {
+    breakfast: {
+      name: "Oats με αυγά & γιαούρτι",
+      ingredients: [
+        { name: "Βρόμη ολικής",         amount: "80g",  p: 10, c: 54, f: 5,  kcal: 299 },
+        { name: "Γάλα 1.5%",            amount: "150ml",p: 5,  c: 7,  f: 2,  kcal: 66  },
+        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Μπανάνα",              amount: "100g", p: 1,  c: 23, f: 0,  kcal: 96  },
+      ]
+    },
+    snack: {
+      name: "Αυγά & φρούτο",
+      ingredients: [
+        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Μήλο",                 amount: "150g", p: 0,  c: 20, f: 0,  kcal: 80  },
+      ]
+    },
+    lunch: {
+      name: "Γαρδουμακαρούνα",
+      isLunch: true,
+      ingredients: [
+        { name: "Μακαρόνια ολικής",     amount: "100g", p: 13, c: 70, f: 2,  kcal: 348 },
+        { name: "Γαρίδες ψητές",        amount: "150g", p: 28, c: 1,  f: 2,  kcal: 138 },
+        { name: "Φριτάτα (αυγό+λαχ.)", amount: "100g", p: 8,  c: 3,  f: 5,  kcal: 89  },
+        { name: "Ελαιόλαδο",            amount: "15ml", p: 0,  c: 0,  f: 14, kcal: 126 },
+        { name: "Λαχανικά εποχής",      amount: "100g", p: 2,  c: 6,  f: 0,  kcal: 32  },
+      ]
+    },
+    dinner: {
+      name: "Σολομός & γλυκοπατάτα",
+      ingredients: [
+        { name: "Σολομός ψητός",        amount: "200g", p: 40, c: 0,  f: 13, kcal: 281 },
+        { name: "Γλυκοπατάτα ψητή",     amount: "200g", p: 3,  c: 41, f: 0,  kcal: 176 },
+        { name: "Λαχανικά ατμού",       amount: "150g", p: 3,  c: 8,  f: 0,  kcal: 44  },
+        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+      ]
+    }
+  },
+  // ── ΤΡΙΤΗ ──
+  {
+    breakfast: {
+      name: "Omelette 3 αυγών",
+      ingredients: [
+        { name: "Αυγά",                 amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Ψωμί ολικής",          amount: "80g",  p: 8,  c: 38, f: 2,  kcal: 202 },
+        { name: "Γιαούρτι 0%",          amount: "100g", p: 9,  c: 4,  f: 0,  kcal: 50  },
+        { name: "Τυρί light",           amount: "30g",  p: 6,  c: 1,  f: 3,  kcal: 55  },
+        { name: "Ντομάτα/λαχανικά",     amount: "100g", p: 1,  c: 4,  f: 0,  kcal: 20  },
+      ]
+    },
+    snack: {
+      name: "Γιαούρτι & ξηροί καρποί",
+      ingredients: [
+        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Αμύγδαλα",             amount: "20g",  p: 4,  c: 3,  f: 11, kcal: 123 },
+      ]
+    },
+    lunch: {
+      name: "Κοτόπουλο ψητό & ρύζι",
+      isLunch: true,
+      ingredients: [
+        { name: "Κοτόπουλο ψητό",       amount: "200g", p: 46, c: 0,  f: 5,  kcal: 233 },
+        { name: "Ρύζι καστανό",         amount: "80g ωμό (≈200g μαγ.)", p: 6, c: 60, f: 2, kcal: 282 },
+        { name: "Σαλάτα λαχανικών",     amount: "150g", p: 2,  c: 7,  f: 0,  kcal: 36  },
+        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+      ]
+    },
+    dinner: {
+      name: "Κοτόπουλο & κινόα",
+      ingredients: [
+        { name: "Κοτόπουλο ψητό",       amount: "200g", p: 46, c: 0,  f: 5,  kcal: 233 },
+        { name: "Κινόα",                amount: "70g ωμή (≈185g μαγ.)", p: 9, c: 44, f: 4, kcal: 248 },
+        { name: "Λαχανικά ψητά",        amount: "150g", p: 2,  c: 10, f: 1,  kcal: 57  },
+        { name: "Ελαιόλαδο",            amount: "8ml",  p: 0,  c: 0,  f: 7,  kcal: 67  },
+      ]
+    }
+  },
+  // ── ΤΕΤΑΡΤΗ (ποδόσφαιρο) ──
+  {
+    breakfast: {
+      name: "Αυγά & γιαούρτι (ημέρα αγώνα)",
+      ingredients: [
+        { name: "Αυγά scrambled",       amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Ψωμί ολικής",          amount: "100g", p: 9,  c: 47, f: 2,  kcal: 249 },
+        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Μπανάνα",              amount: "120g", p: 1,  c: 27, f: 0,  kcal: 114 },
+      ]
+    },
+    snack: {
+      name: "Γιαούρτι & μέλι (pre-match)",
+      ingredients: [
+        { name: "Γιαούρτι 2%",          amount: "200g", p: 14, c: 10, f: 4,  kcal: 132 },
+        { name: "Μέλι",                 amount: "15g",  p: 0,  c: 12, f: 0,  kcal: 47  },
+        { name: "Μπανάνα",              amount: "100g", p: 1,  c: 23, f: 0,  kcal: 96  },
+      ]
+    },
+    lunch: {
+      name: "Σαλάτα κινόα & σολομός",
+      isLunch: true,
+      ingredients: [
+        { name: "Κινόα",                amount: "80g ωμή (≈210g μαγ.)", p: 10, c: 51, f: 5, kcal: 288 },
+        { name: "Σολομός ψητός",        amount: "150g", p: 30, c: 0,  f: 10, kcal: 210 },
+        { name: "Λαχανικά μικτά",       amount: "150g", p: 2,  c: 8,  f: 0,  kcal: 40  },
+        { name: "Ελαιόλαδο",            amount: "12ml", p: 0,  c: 0,  f: 11, kcal: 100 },
+      ]
+    },
+    dinner: {
+      name: "Post-match: Γιαούρτι bowl & αυγά",
+      ingredients: [
+        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Ρύζι λευκό",           amount: "80g ωμό (≈200g μαγ.)", p: 5, c: 62, f: 1, kcal: 277 },
+        { name: "Ελαιόλαδο",            amount: "8ml",  p: 0,  c: 0,  f: 7,  kcal: 67  },
+      ]
+    }
+  },
+  // ── ΠΕΜΠΤΗ ──
+  {
+    breakfast: {
+      name: "Overnight oats με αυγά",
+      ingredients: [
+        { name: "Βρόμη ολικής",         amount: "80g",  p: 10, c: 54, f: 5,  kcal: 299 },
+        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Αυγό βραστό",          amount: "1 τεμ (50g)",  p: 6,  c: 0,  f: 5,  kcal: 69  },
+        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Φρούτο (μήλο/αχλάδι)",amount: "150g", p: 0,  c: 20, f: 0,  kcal: 80  },
+      ]
+    },
+    snack: {
+      name: "Αυγά & κράκερς",
+      ingredients: [
+        { name: "Αυγά βραστά",          amount: "2 τεμ (100g)", p: 13, c: 1,  f: 9,  kcal: 140 },
+        { name: "Κράκερς ολικής",       amount: "30g",  p: 3,  c: 20, f: 2,  kcal: 110 },
+        { name: "Γιαούρτι 0%",          amount: "100g", p: 9,  c: 4,  f: 0,  kcal: 50  },
+      ]
+    },
+    lunch: {
+      name: "Φασολάδα",
+      isLunch: true,
+      ingredients: [
+        { name: "Φασόλια (βρασμένα)",   amount: "300g", p: 18, c: 54, f: 2,  kcal: 306 },
+        { name: "Ντομάτα/λαχανικά",     amount: "150g", p: 2,  c: 8,  f: 0,  kcal: 40  },
+        { name: "Ελαιόλαδο",            amount: "15ml", p: 0,  c: 0,  f: 14, kcal: 126 },
+        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Ψωμί ολικής",          amount: "60g",  p: 6,  c: 28, f: 1,  kcal: 149 },
+      ]
+    },
+    dinner: {
+      name: "Μοσχάρι & λαχανικά",
+      ingredients: [
+        { name: "Μοσχαρίσιο κρέας",     amount: "180g", p: 36, c: 0,  f: 8,  kcal: 220 },
+        { name: "Πατάτα ψητή",          amount: "200g", p: 4,  c: 36, f: 0,  kcal: 160 },
+        { name: "Λαχανικά ψητά",        amount: "150g", p: 2,  c: 10, f: 1,  kcal: 57  },
+        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+      ]
+    }
+  },
+  // ── ΠΑΡΑΣΚΕΥΗ ──
+  {
+    breakfast: {
+      name: "Αυγά & γιαούρτι",
+      ingredients: [
+        { name: "Αυγά omelette",        amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Ψωμί ολικής",          amount: "80g",  p: 8,  c: 38, f: 2,  kcal: 202 },
+        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+      ]
+    },
+    snack: {
+      name: "Γιαούρτι & καρύδια",
+      ingredients: [
+        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Καρύδια",              amount: "20g",  p: 4,  c: 2,  f: 13, kcal: 139 },
+        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+      ]
+    },
+    lunch: {
+      name: "Μακαρονοσαλάτα",
+      isLunch: true,
+      ingredients: [
+        { name: "Μακαρόνια ολικής",     amount: "100g ωμά", p: 13, c: 70, f: 2, kcal: 348 },
+        { name: "Κοτόπουλο ψητό",       amount: "150g", p: 35, c: 0,  f: 4,  kcal: 176 },
+        { name: "Pesto βασιλικού",      amount: "20g",  p: 1,  c: 1,  f: 8,  kcal: 82  },
+        { name: "Γιαούρτι 2%",          amount: "60g",  p: 4,  c: 3,  f: 1,  kcal: 38  },
+        { name: "Αγγούρι/λαχανικά",     amount: "100g", p: 1,  c: 3,  f: 0,  kcal: 16  },
+      ]
+    },
+    dinner: {
+      name: "Γαρίδες & ρύζι",
+      ingredients: [
+        { name: "Γαρίδες ψητές",        amount: "250g", p: 47, c: 1,  f: 3,  kcal: 219 },
+        { name: "Ρύζι καστανό",         amount: "80g ωμό", p: 6, c: 60, f: 2, kcal: 282 },
+        { name: "Σαλάτα",              amount: "150g", p: 2,  c: 7,  f: 0,  kcal: 36  },
+        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+      ]
+    }
+  },
+  // ── ΣΑΒΒΑΤΟ ──
+  {
+    breakfast: {
+      name: "Big breakfast Σαββάτου",
+      ingredients: [
+        { name: "Αυγά scrambled",       amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Ψωμί ολικής",          amount: "100g", p: 9,  c: 47, f: 2,  kcal: 249 },
+        { name: "Μέλι",                 amount: "15g",  p: 0,  c: 12, f: 0,  kcal: 47  },
+        { name: "Φρούτο",               amount: "150g", p: 1,  c: 20, f: 0,  kcal: 84  },
+      ]
+    },
+    snack: {
+      name: "Αυγά & ξηροί καρποί",
+      ingredients: [
+        { name: "Αυγά βραστά",          amount: "2 τεμ (100g)", p: 13, c: 1,  f: 9,  kcal: 140 },
+        { name: "Αμύγδαλα",             amount: "25g",  p: 5,  c: 3,  f: 14, kcal: 154 },
+        { name: "Γιαούρτι 0%",          amount: "100g", p: 9,  c: 4,  f: 0,  kcal: 50  },
+      ]
+    },
+    lunch: {
+      name: "Φασολάκια & αυγά",
+      isLunch: true,
+      ingredients: [
+        { name: "Φασολάκια βρασμένα",   amount: "300g", p: 6,  c: 18, f: 0,  kcal: 96  },
+        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Γιαούρτι 0% cottage style", amount: "150g", p: 13, c: 6, f: 0, kcal: 76 },
+        { name: "Ελαιόλαδο",            amount: "12ml", p: 0,  c: 0,  f: 11, kcal: 100 },
+        { name: "Πατάτα βραστή",        amount: "150g", p: 3,  c: 27, f: 0,  kcal: 120 },
+      ]
+    },
+    dinner: {
+      name: "Μπιφτέκια & σαλάτα",
+      ingredients: [
+        { name: "Μοσχαρίσια μπιφτέκια", amount: "200g (3 τεμ)", p: 36, c: 2,  f: 14, kcal: 282 },
+        { name: "Γιαούρτι 2%",          amount: "80g",  p: 6,  c: 4,  f: 2,  kcal: 58  },
+        { name: "Κεφαλοτύρι τριμμένο",  amount: "20g",  p: 5,  c: 0,  f: 6,  kcal: 74  },
+        { name: "Σαλάτα λαχανικών",     amount: "200g", p: 3,  c: 8,  f: 0,  kcal: 44  },
+        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+      ]
+    }
+  },
+  // ── ΚΥΡΙΑΚΗ ──
+  {
+    breakfast: {
+      name: "Κυριακάτικο πρωινό",
+      ingredients: [
+        { name: "Αυγά scrambled",       amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Ψωμί ολικής",          amount: "80g",  p: 8,  c: 38, f: 2,  kcal: 202 },
+        { name: "Φρούτο",               amount: "150g", p: 1,  c: 20, f: 0,  kcal: 84  },
+      ]
+    },
+    snack: {
+      name: "Γιαούρτι bowl",
+      ingredients: [
+        { name: "Γιαούρτι 0%",          amount: "250g", p: 22, c: 10, f: 0,  kcal: 128 },
+        { name: "Μέλι",                 amount: "15g",  p: 0,  c: 12, f: 0,  kcal: 47  },
+        { name: "Granola ολικής",        amount: "30g",  p: 3,  c: 20, f: 4,  kcal: 128 },
+      ]
+    },
+    lunch: {
+      name: "Μακαρονοσαλάτα Κυριακής",
+      isLunch: true,
+      ingredients: [
+        { name: "Μακαρόνια ολικής",     amount: "100g ωμά", p: 13, c: 70, f: 2, kcal: 348 },
+        { name: "Κοτόπουλο ψητό",       amount: "160g", p: 37, c: 0,  f: 4,  kcal: 188 },
+        { name: "Pesto & γιαούρτι",     amount: "30g",  p: 3,  c: 2,  f: 6,  kcal: 74  },
+        { name: "Αγγούρι & ντομάτα",    amount: "150g", p: 2,  c: 6,  f: 0,  kcal: 32  },
+        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+      ]
+    },
+    dinner: {
+      name: "Ελαφρύ βραδινό",
+      ingredients: [
+        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Ρυζογκοφρέτες",        amount: "40g",  p: 3,  c: 30, f: 1,  kcal: 141 },
+        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+      ]
+    }
+  },
+];
+
+const MEAL_META = [
+  { key: "breakfast", emoji: "🌅", label: "Πρωινό",       time: "07:30 – 08:00" },
+  { key: "snack",     emoji: "🍎", label: "Σνακ",         time: "11:00 – 11:30" },
+  { key: "lunch",     emoji: "☀️", label: "Μεσημεριανό",  time: "13:30 – 14:00" },
+  { key: "dinner",    emoji: "🌙", label: "Βραδινό",      time: "19:30 – 20:00" },
+];
+
+const TARGETS = { kcal: 2150, p: 190, c: 210, f: 60 };
+
+let activeDay = 0;
+
+function sumMeal(meal) {
+  return meal.ingredients.reduce((acc, ing) => ({
+    kcal: acc.kcal + ing.kcal,
+    p: acc.p + ing.p,
+    c: acc.c + ing.c,
+    f: acc.f + ing.f,
+  }), { kcal: 0, p: 0, c: 0, f: 0 });
+}
+
+function sumDay(dayIdx) {
+  const day = PLAN[dayIdx];
+  const keys = ["breakfast", "snack", "lunch", "dinner"];
+  return keys.reduce((acc, k) => {
+    const s = sumMeal(day[k]);
+    return { kcal: acc.kcal + s.kcal, p: acc.p + s.p, c: acc.c + s.c, f: acc.f + s.f };
+  }, { kcal: 0, p: 0, c: 0, f: 0 });
+}
+
+function updateTotals(dayIdx) {
+  const tot = sumDay(dayIdx);
+  document.getElementById("tot-kcal").textContent = tot.kcal;
+  document.getElementById("tot-p").textContent   = tot.p;
+  document.getElementById("tot-c").textContent   = tot.c;
+  document.getElementById("tot-f").textContent   = tot.f;
+
+  const pPct = Math.min(100, Math.round(tot.p / TARGETS.p * 100));
+  const cPct = Math.min(100, Math.round(tot.c / TARGETS.c * 100));
+  const fPct = Math.min(100, Math.round(tot.f / TARGETS.f * 100));
+
+  document.getElementById("bar-p").style.width = pPct + "%";
+  document.getElementById("bar-c").style.width = cPct + "%";
+  document.getElementById("bar-f").style.width = fPct + "%";
+
+  document.getElementById("bar-p-lbl").textContent = `${tot.p} / ${TARGETS.p}g`;
+  document.getElementById("bar-c-lbl").textContent = `${tot.c} / ${TARGETS.c}g`;
+  document.getElementById("bar-f-lbl").textContent = `${tot.f} / ${TARGETS.f}g`;
+}
+
+function renderDays() {
+  const scroll = document.getElementById("day-scroll");
+  scroll.innerHTML = "";
+  DAYS.forEach((d, i) => {
+    const btn = document.createElement("button");
+    btn.className = "day-btn" + (i === activeDay ? " active" : "");
+    btn.innerHTML = `${d.short}<div class="day-type">${d.type}</div>`;
+    btn.onclick = () => { activeDay = i; render(); };
+    scroll.appendChild(btn);
+  });
+}
+
+function renderMeals() {
+  const container = document.getElementById("meals-container");
+  container.innerHTML = "";
+  const dayData = PLAN[activeDay];
+
+  MEAL_META.forEach(meta => {
+    const mealData = dayData[meta.key];
+    const totals = sumMeal(mealData);
+    const isLunch = !!mealData.isLunch;
+
+    const card = document.createElement("div");
+    card.className = "meal-card" + (isLunch ? " lunch" : "");
+
+    const badge = isLunch ? `<span class="lunch-badge">ΙΔΙΟ ΜΕ ΚΟΠΕΛΑ</span>` : "";
+
+    let ingredientRows = mealData.ingredients.map(ing => `
+      <li class="ingredient-row">
+        <span class="ing-name">${ing.name}</span>
+        <div class="ing-right">
+          <div class="ing-amount">${ing.amount}</div>
+          <div class="ing-macros">${ing.p}P · ${ing.c}C · ${ing.f}F · ${ing.kcal}kcal</div>
+        </div>
+      </li>
+    `).join("");
+
+    card.innerHTML = `
+      <div class="meal-header">
+        <div class="meal-title-wrap">
+          <span class="meal-emoji">${meta.emoji}</span>
+          <div>
+            <div class="meal-name">${meta.label}${badge}</div>
+            <div class="meal-time">${meta.time} · ${mealData.name}</div>
+          </div>
+        </div>
+        <div class="meal-kcal">${totals.kcal} kcal</div>
+      </div>
+      <div class="meal-macros-row">
+        <span class="meal-macro-chip chip-p">P: ${totals.p}g</span>
+        <span class="meal-macro-chip chip-c">C: ${totals.c}g</span>
+        <span class="meal-macro-chip chip-f">F: ${totals.f}g</span>
+      </div>
+      <div class="meal-body">
+        <ul class="ingredients-list">${ingredientRows}</ul>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function render() {
+  renderDays();
+  renderMeals();
+  updateTotals(activeDay);
+}
+
+render();
+
+// PWA service worker registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
