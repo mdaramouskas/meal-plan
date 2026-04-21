@@ -250,6 +250,105 @@
     .note-row:last-child { margin-bottom: 0; }
     .note-arrow { color: var(--accent); font-size: 12px; margin-top: 1px; flex-shrink: 0; }
     .note-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #0a0a16;
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-btn {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s;
+    }
+    .nav-btn.active { color: var(--accent); }
+    .nav-btn .nav-icon { font-size: 20px; }
+    body { padding-bottom: 80px; }
+
+    /* SHOP PAGE */
+    #shop-page { display: none; }
+    .shop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .export-btn {
+      background: var(--accent);
+      color: #0a0a16;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .shop-category {
+      background: var(--bg2);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .shop-cat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .shop-cat-title { font-size: 13px; font-weight: 700; color: #ddd; }
+    .shop-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .shop-item:last-child { border-bottom: none; }
+    .shop-checkbox {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .shop-item.checked .shop-checkbox {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .shop-item.checked .shop-checkbox::after { content: "✓"; color: #0a0a16; font-size: 12px; font-weight: 800; }
+    .shop-item.checked .shop-item-name { text-decoration: line-through; color: var(--dim); }
+    .shop-item-info { flex: 1; }
+    .shop-item-name { font-size: 13px; color: #ddd; }
+    .shop-item-qty { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .shop-reset-btn {
+      width: 100%;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -336,285 +435,287 @@ const DAYS = [
 // Each day has 4 meals: breakfast, snack, lunch, dinner
 // Each meal has ingredients with: name, amount (g or ml), protein, carbs, fat, kcal
 const PLAN = [
-  // ── ΔΕΥΤΕΡΑ ──
+  // ── ΔΕΥΤΕΡΑ ── ~190g P
   {
     breakfast: {
       name: "Oats με αυγά & γιαούρτι",
       ingredients: [
-        { name: "Βρόμη ολικής",         amount: "80g",  p: 10, c: 54, f: 5,  kcal: 299 },
-        { name: "Γάλα 1.5%",            amount: "150ml",p: 5,  c: 7,  f: 2,  kcal: 66  },
-        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
-        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
-        { name: "Μπανάνα",              amount: "100g", p: 1,  c: 23, f: 0,  kcal: 96  },
+        { name: "Βρόμη ολικής",         amount: "80g",          p: 10, c: 54, f: 5,  kcal: 299 },
+        { name: "Γάλα 1.5%",            amount: "150ml",        p: 5,  c: 7,  f: 2,  kcal: 66  },
+        { name: "Γιαούρτι 0%",          amount: "200g",         p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Αυγά βραστά",          amount: "2 τεμ (100g)", p: 13, c: 1,  f: 9,  kcal: 140 },
+        { name: "Μέλι",                 amount: "10g",          p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Μπανάνα",              amount: "100g",         p: 1,  c: 23, f: 0,  kcal: 96  },
       ]
     },
     snack: {
-      name: "Αυγά & φρούτο",
+      name: "Αυγά & γιαούρτι",
       ingredients: [
-        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Μήλο",                 amount: "150g", p: 0,  c: 20, f: 0,  kcal: 80  },
+        { name: "Αυγά βραστά",          amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Γιαούρτι 0%",          amount: "150g",         p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Μήλο",                 amount: "150g",         p: 0,  c: 20, f: 0,  kcal: 80  },
       ]
     },
     lunch: {
       name: "Γαρδουμακαρούνα",
       isLunch: true,
       ingredients: [
-        { name: "Μακαρόνια ολικής",     amount: "100g", p: 13, c: 70, f: 2,  kcal: 348 },
-        { name: "Γαρίδες ψητές",        amount: "150g", p: 28, c: 1,  f: 2,  kcal: 138 },
-        { name: "Φριτάτα (αυγό+λαχ.)", amount: "100g", p: 8,  c: 3,  f: 5,  kcal: 89  },
-        { name: "Ελαιόλαδο",            amount: "15ml", p: 0,  c: 0,  f: 14, kcal: 126 },
-        { name: "Λαχανικά εποχής",      amount: "100g", p: 2,  c: 6,  f: 0,  kcal: 32  },
+        { name: "Μακαρόνια ολικής",     amount: "100g",         p: 13, c: 70, f: 2,  kcal: 348 },
+        { name: "Γαρίδες ψητές",        amount: "200g",         p: 37, c: 1,  f: 2,  kcal: 184 },
+        { name: "Φριτάτα (αυγό+λαχ.)", amount: "100g",         p: 8,  c: 3,  f: 5,  kcal: 89  },
+        { name: "Ελαιόλαδο",            amount: "15ml",         p: 0,  c: 0,  f: 14, kcal: 126 },
+        { name: "Λαχανικά εποχής",      amount: "100g",         p: 2,  c: 6,  f: 0,  kcal: 32  },
       ]
     },
     dinner: {
       name: "Σολομός & γλυκοπατάτα",
       ingredients: [
-        { name: "Σολομός ψητός",        amount: "200g", p: 40, c: 0,  f: 13, kcal: 281 },
-        { name: "Γλυκοπατάτα ψητή",     amount: "200g", p: 3,  c: 41, f: 0,  kcal: 176 },
-        { name: "Λαχανικά ατμού",       amount: "150g", p: 3,  c: 8,  f: 0,  kcal: 44  },
-        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+        { name: "Σολομός ψητός",        amount: "250g",         p: 50, c: 0,  f: 16, kcal: 350 },
+        { name: "Γλυκοπατάτα ψητή",     amount: "180g",         p: 3,  c: 37, f: 0,  kcal: 160 },
+        { name: "Λαχανικά ατμού",       amount: "150g",         p: 3,  c: 8,  f: 0,  kcal: 44  },
+        { name: "Ελαιόλαδο",            amount: "10ml",         p: 0,  c: 0,  f: 9,  kcal: 84  },
       ]
     }
   },
-  // ── ΤΡΙΤΗ ──
+  // ── ΤΡΙΤΗ ── ~194g P
   {
     breakfast: {
-      name: "Omelette 3 αυγών",
+      name: "Omelette 4 αυγών με γιαούρτι",
       ingredients: [
-        { name: "Αυγά",                 amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Ψωμί ολικής",          amount: "80g",  p: 8,  c: 38, f: 2,  kcal: 202 },
-        { name: "Γιαούρτι 0%",          amount: "100g", p: 9,  c: 4,  f: 0,  kcal: 50  },
-        { name: "Τυρί light",           amount: "30g",  p: 6,  c: 1,  f: 3,  kcal: 55  },
-        { name: "Ντομάτα/λαχανικά",     amount: "100g", p: 1,  c: 4,  f: 0,  kcal: 20  },
+        { name: "Αυγά",                 amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Ψωμί ολικής",          amount: "80g",          p: 8,  c: 38, f: 2,  kcal: 202 },
+        { name: "Γιαούρτι 0%",          amount: "150g",         p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Τυρί light",           amount: "30g",          p: 6,  c: 1,  f: 3,  kcal: 55  },
+        { name: "Ντομάτα/λαχανικά",     amount: "100g",         p: 1,  c: 4,  f: 0,  kcal: 20  },
       ]
     },
     snack: {
       name: "Γιαούρτι & ξηροί καρποί",
       ingredients: [
-        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
-        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
-        { name: "Αμύγδαλα",             amount: "20g",  p: 4,  c: 3,  f: 11, kcal: 123 },
+        { name: "Γιαούρτι 0%",          amount: "250g",         p: 22, c: 10, f: 0,  kcal: 128 },
+        { name: "Μέλι",                 amount: "10g",          p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Αμύγδαλα",             amount: "20g",          p: 4,  c: 3,  f: 11, kcal: 123 },
       ]
     },
     lunch: {
       name: "Κοτόπουλο ψητό & ρύζι",
       isLunch: true,
       ingredients: [
-        { name: "Κοτόπουλο ψητό",       amount: "200g", p: 46, c: 0,  f: 5,  kcal: 233 },
-        { name: "Ρύζι καστανό",         amount: "80g ωμό (≈200g μαγ.)", p: 6, c: 60, f: 2, kcal: 282 },
-        { name: "Σαλάτα λαχανικών",     amount: "150g", p: 2,  c: 7,  f: 0,  kcal: 36  },
-        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+        { name: "Κοτόπουλο ψητό",       amount: "250g",                        p: 58, c: 0,  f: 6,  kcal: 290 },
+        { name: "Ρύζι καστανό",         amount: "80g ωμό (≈200g μαγ.)",        p: 6,  c: 60, f: 2,  kcal: 282 },
+        { name: "Σαλάτα λαχανικών",     amount: "150g",                        p: 2,  c: 7,  f: 0,  kcal: 36  },
+        { name: "Ελαιόλαδο",            amount: "10ml",                        p: 0,  c: 0,  f: 9,  kcal: 84  },
       ]
     },
     dinner: {
       name: "Κοτόπουλο & κινόα",
       ingredients: [
-        { name: "Κοτόπουλο ψητό",       amount: "200g", p: 46, c: 0,  f: 5,  kcal: 233 },
-        { name: "Κινόα",                amount: "70g ωμή (≈185g μαγ.)", p: 9, c: 44, f: 4, kcal: 248 },
-        { name: "Λαχανικά ψητά",        amount: "150g", p: 2,  c: 10, f: 1,  kcal: 57  },
-        { name: "Ελαιόλαδο",            amount: "8ml",  p: 0,  c: 0,  f: 7,  kcal: 67  },
+        { name: "Κοτόπουλο ψητό",       amount: "250g",                        p: 58, c: 0,  f: 6,  kcal: 290 },
+        { name: "Κινόα",                amount: "70g ωμή (≈185g μαγ.)",        p: 9,  c: 44, f: 4,  kcal: 248 },
+        { name: "Λαχανικά ψητά",        amount: "150g",                        p: 2,  c: 10, f: 1,  kcal: 57  },
+        { name: "Ελαιόλαδο",            amount: "8ml",                         p: 0,  c: 0,  f: 7,  kcal: 67  },
       ]
     }
   },
-  // ── ΤΕΤΑΡΤΗ (ποδόσφαιρο) ──
+  // ── ΤΕΤΑΡΤΗ (ποδόσφαιρο) ── ~188g P
   {
     breakfast: {
       name: "Αυγά & γιαούρτι (ημέρα αγώνα)",
       ingredients: [
-        { name: "Αυγά scrambled",       amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Ψωμί ολικής",          amount: "100g", p: 9,  c: 47, f: 2,  kcal: 249 },
-        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
-        { name: "Μπανάνα",              amount: "120g", p: 1,  c: 27, f: 0,  kcal: 114 },
+        { name: "Αυγά scrambled",       amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Ψωμί ολικής",          amount: "100g",         p: 9,  c: 47, f: 2,  kcal: 249 },
+        { name: "Γιαούρτι 0%",          amount: "150g",         p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Μπανάνα",              amount: "120g",         p: 1,  c: 27, f: 0,  kcal: 114 },
       ]
     },
     snack: {
       name: "Γιαούρτι & μέλι (pre-match)",
       ingredients: [
-        { name: "Γιαούρτι 2%",          amount: "200g", p: 14, c: 10, f: 4,  kcal: 132 },
-        { name: "Μέλι",                 amount: "15g",  p: 0,  c: 12, f: 0,  kcal: 47  },
-        { name: "Μπανάνα",              amount: "100g", p: 1,  c: 23, f: 0,  kcal: 96  },
+        { name: "Γιαούρτι 0%",          amount: "250g",         p: 22, c: 10, f: 0,  kcal: 128 },
+        { name: "Μέλι",                 amount: "15g",          p: 0,  c: 12, f: 0,  kcal: 47  },
+        { name: "Μπανάνα",              amount: "100g",         p: 1,  c: 23, f: 0,  kcal: 96  },
       ]
     },
     lunch: {
       name: "Σαλάτα κινόα & σολομός",
       isLunch: true,
       ingredients: [
-        { name: "Κινόα",                amount: "80g ωμή (≈210g μαγ.)", p: 10, c: 51, f: 5, kcal: 288 },
-        { name: "Σολομός ψητός",        amount: "150g", p: 30, c: 0,  f: 10, kcal: 210 },
-        { name: "Λαχανικά μικτά",       amount: "150g", p: 2,  c: 8,  f: 0,  kcal: 40  },
-        { name: "Ελαιόλαδο",            amount: "12ml", p: 0,  c: 0,  f: 11, kcal: 100 },
+        { name: "Κινόα",                amount: "80g ωμή (≈210g μαγ.)",        p: 10, c: 51, f: 5,  kcal: 288 },
+        { name: "Σολομός ψητός",        amount: "200g",                        p: 40, c: 0,  f: 13, kcal: 281 },
+        { name: "Λαχανικά μικτά",       amount: "150g",                        p: 2,  c: 8,  f: 0,  kcal: 40  },
+        { name: "Ελαιόλαδο",            amount: "12ml",                        p: 0,  c: 0,  f: 11, kcal: 100 },
       ]
     },
     dinner: {
-      name: "Post-match: Γιαούρτι bowl & αυγά",
+      name: "Post-match: αυγά & γιαούρτι",
       ingredients: [
-        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
-        { name: "Ρύζι λευκό",           amount: "80g ωμό (≈200g μαγ.)", p: 5, c: 62, f: 1, kcal: 277 },
-        { name: "Ελαιόλαδο",            amount: "8ml",  p: 0,  c: 0,  f: 7,  kcal: 67  },
+        { name: "Αυγά βραστά",          amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Γιαούρτι 0%",          amount: "250g",         p: 22, c: 10, f: 0,  kcal: 128 },
+        { name: "Ρύζι λευκό",           amount: "80g ωμό (≈200g μαγ.)",        p: 5,  c: 62, f: 1,  kcal: 277 },
+        { name: "Ελαιόλαδο",            amount: "8ml",          p: 0,  c: 0,  f: 7,  kcal: 67  },
       ]
     }
   },
-  // ── ΠΕΜΠΤΗ ──
+  // ── ΠΕΜΠΤΗ ── ~192g P
   {
     breakfast: {
       name: "Overnight oats με αυγά",
       ingredients: [
-        { name: "Βρόμη ολικής",         amount: "80g",  p: 10, c: 54, f: 5,  kcal: 299 },
-        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
-        { name: "Αυγό βραστό",          amount: "1 τεμ (50g)",  p: 6,  c: 0,  f: 5,  kcal: 69  },
-        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
-        { name: "Φρούτο (μήλο/αχλάδι)",amount: "150g", p: 0,  c: 20, f: 0,  kcal: 80  },
+        { name: "Βρόμη ολικής",         amount: "80g",          p: 10, c: 54, f: 5,  kcal: 299 },
+        { name: "Γιαούρτι 0%",          amount: "200g",         p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Αυγά βραστά",          amount: "2 τεμ (100g)", p: 13, c: 1,  f: 9,  kcal: 140 },
+        { name: "Μέλι",                 amount: "10g",          p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Φρούτο (μήλο/αχλάδι)", amount: "150g",        p: 0,  c: 20, f: 0,  kcal: 80  },
       ]
     },
     snack: {
-      name: "Αυγά & κράκερς",
+      name: "Αυγά & γιαούρτι",
       ingredients: [
-        { name: "Αυγά βραστά",          amount: "2 τεμ (100g)", p: 13, c: 1,  f: 9,  kcal: 140 },
-        { name: "Κράκερς ολικής",       amount: "30g",  p: 3,  c: 20, f: 2,  kcal: 110 },
-        { name: "Γιαούρτι 0%",          amount: "100g", p: 9,  c: 4,  f: 0,  kcal: 50  },
+        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Γιαούρτι 0%",          amount: "150g",         p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Κράκερς ολικής",       amount: "30g",          p: 3,  c: 20, f: 2,  kcal: 110 },
       ]
     },
     lunch: {
       name: "Φασολάδα",
       isLunch: true,
       ingredients: [
-        { name: "Φασόλια (βρασμένα)",   amount: "300g", p: 18, c: 54, f: 2,  kcal: 306 },
-        { name: "Ντομάτα/λαχανικά",     amount: "150g", p: 2,  c: 8,  f: 0,  kcal: 40  },
-        { name: "Ελαιόλαδο",            amount: "15ml", p: 0,  c: 0,  f: 14, kcal: 126 },
-        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Ψωμί ολικής",          amount: "60g",  p: 6,  c: 28, f: 1,  kcal: 149 },
+        { name: "Φασόλια (βρασμένα)",   amount: "300g",         p: 18, c: 54, f: 2,  kcal: 306 },
+        { name: "Ντομάτα/λαχανικά",     amount: "150g",         p: 2,  c: 8,  f: 0,  kcal: 40  },
+        { name: "Ελαιόλαδο",            amount: "15ml",         p: 0,  c: 0,  f: 14, kcal: 126 },
+        { name: "Αυγά βραστά",          amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Ψωμί ολικής",          amount: "60g",          p: 6,  c: 28, f: 1,  kcal: 149 },
       ]
     },
     dinner: {
       name: "Μοσχάρι & λαχανικά",
       ingredients: [
-        { name: "Μοσχαρίσιο κρέας",     amount: "180g", p: 36, c: 0,  f: 8,  kcal: 220 },
-        { name: "Πατάτα ψητή",          amount: "200g", p: 4,  c: 36, f: 0,  kcal: 160 },
-        { name: "Λαχανικά ψητά",        amount: "150g", p: 2,  c: 10, f: 1,  kcal: 57  },
-        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+        { name: "Μοσχαρίσιο κρέας",     amount: "220g",         p: 44, c: 0,  f: 10, kcal: 270 },
+        { name: "Πατάτα ψητή",          amount: "180g",         p: 4,  c: 32, f: 0,  kcal: 144 },
+        { name: "Λαχανικά ψητά",        amount: "150g",         p: 2,  c: 10, f: 1,  kcal: 57  },
+        { name: "Ελαιόλαδο",            amount: "10ml",         p: 0,  c: 0,  f: 9,  kcal: 84  },
       ]
     }
   },
-  // ── ΠΑΡΑΣΚΕΥΗ ──
+  // ── ΠΑΡΑΣΚΕΥΗ ── ~189g P
   {
     breakfast: {
       name: "Αυγά & γιαούρτι",
       ingredients: [
-        { name: "Αυγά omelette",        amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
-        { name: "Ψωμί ολικής",          amount: "80g",  p: 8,  c: 38, f: 2,  kcal: 202 },
-        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Αυγά omelette",        amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Γιαούρτι 0%",          amount: "150g",         p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Ψωμί ολικής",          amount: "80g",          p: 8,  c: 38, f: 2,  kcal: 202 },
+        { name: "Μέλι",                 amount: "10g",          p: 0,  c: 8,  f: 0,  kcal: 32  },
       ]
     },
     snack: {
       name: "Γιαούρτι & καρύδια",
       ingredients: [
-        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
-        { name: "Καρύδια",              amount: "20g",  p: 4,  c: 2,  f: 13, kcal: 139 },
-        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Γιαούρτι 0%",          amount: "250g",         p: 22, c: 10, f: 0,  kcal: 128 },
+        { name: "Καρύδια",              amount: "20g",          p: 4,  c: 2,  f: 13, kcal: 139 },
+        { name: "Μέλι",                 amount: "10g",          p: 0,  c: 8,  f: 0,  kcal: 32  },
       ]
     },
     lunch: {
       name: "Μακαρονοσαλάτα",
       isLunch: true,
       ingredients: [
-        { name: "Μακαρόνια ολικής",     amount: "100g ωμά", p: 13, c: 70, f: 2, kcal: 348 },
-        { name: "Κοτόπουλο ψητό",       amount: "150g", p: 35, c: 0,  f: 4,  kcal: 176 },
-        { name: "Pesto βασιλικού",      amount: "20g",  p: 1,  c: 1,  f: 8,  kcal: 82  },
-        { name: "Γιαούρτι 2%",          amount: "60g",  p: 4,  c: 3,  f: 1,  kcal: 38  },
-        { name: "Αγγούρι/λαχανικά",     amount: "100g", p: 1,  c: 3,  f: 0,  kcal: 16  },
+        { name: "Μακαρόνια ολικής",     amount: "100g ωμά",     p: 13, c: 70, f: 2,  kcal: 348 },
+        { name: "Κοτόπουλο ψητό",       amount: "200g",         p: 46, c: 0,  f: 5,  kcal: 233 },
+        { name: "Pesto βασιλικού",      amount: "20g",          p: 1,  c: 1,  f: 8,  kcal: 82  },
+        { name: "Γιαούρτι 2%",          amount: "60g",          p: 4,  c: 3,  f: 1,  kcal: 38  },
+        { name: "Αγγούρι/λαχανικά",     amount: "100g",         p: 1,  c: 3,  f: 0,  kcal: 16  },
       ]
     },
     dinner: {
       name: "Γαρίδες & ρύζι",
       ingredients: [
-        { name: "Γαρίδες ψητές",        amount: "250g", p: 47, c: 1,  f: 3,  kcal: 219 },
-        { name: "Ρύζι καστανό",         amount: "80g ωμό", p: 6, c: 60, f: 2, kcal: 282 },
-        { name: "Σαλάτα",              amount: "150g", p: 2,  c: 7,  f: 0,  kcal: 36  },
-        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+        { name: "Γαρίδες ψητές",        amount: "300g",         p: 56, c: 1,  f: 4,  kcal: 264 },
+        { name: "Ρύζι καστανό",         amount: "80g ωμό",      p: 6,  c: 60, f: 2,  kcal: 282 },
+        { name: "Σαλάτα",               amount: "150g",         p: 2,  c: 7,  f: 0,  kcal: 36  },
+        { name: "Ελαιόλαδο",            amount: "10ml",         p: 0,  c: 0,  f: 9,  kcal: 84  },
       ]
     }
   },
-  // ── ΣΑΒΒΑΤΟ ──
+  // ── ΣΑΒΒΑΤΟ ── ~186g P
   {
     breakfast: {
       name: "Big breakfast Σαββάτου",
       ingredients: [
-        { name: "Αυγά scrambled",       amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
-        { name: "Ψωμί ολικής",          amount: "100g", p: 9,  c: 47, f: 2,  kcal: 249 },
-        { name: "Μέλι",                 amount: "15g",  p: 0,  c: 12, f: 0,  kcal: 47  },
-        { name: "Φρούτο",               amount: "150g", p: 1,  c: 20, f: 0,  kcal: 84  },
+        { name: "Αυγά scrambled",       amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Γιαούρτι 0%",          amount: "200g",         p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Ψωμί ολικής",          amount: "100g",         p: 9,  c: 47, f: 2,  kcal: 249 },
+        { name: "Μέλι",                 amount: "15g",          p: 0,  c: 12, f: 0,  kcal: 47  },
+        { name: "Φρούτο",               amount: "150g",         p: 1,  c: 20, f: 0,  kcal: 84  },
       ]
     },
     snack: {
       name: "Αυγά & ξηροί καρποί",
       ingredients: [
-        { name: "Αυγά βραστά",          amount: "2 τεμ (100g)", p: 13, c: 1,  f: 9,  kcal: 140 },
-        { name: "Αμύγδαλα",             amount: "25g",  p: 5,  c: 3,  f: 14, kcal: 154 },
-        { name: "Γιαούρτι 0%",          amount: "100g", p: 9,  c: 4,  f: 0,  kcal: 50  },
+        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
+        { name: "Αμύγδαλα",             amount: "25g",          p: 5,  c: 3,  f: 14, kcal: 154 },
+        { name: "Γιαούρτι 0%",          amount: "150g",         p: 13, c: 6,  f: 0,  kcal: 76  },
       ]
     },
     lunch: {
       name: "Φασολάκια & αυγά",
       isLunch: true,
       ingredients: [
-        { name: "Φασολάκια βρασμένα",   amount: "300g", p: 6,  c: 18, f: 0,  kcal: 96  },
-        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Γιαούρτι 0% cottage style", amount: "150g", p: 13, c: 6, f: 0, kcal: 76 },
-        { name: "Ελαιόλαδο",            amount: "12ml", p: 0,  c: 0,  f: 11, kcal: 100 },
-        { name: "Πατάτα βραστή",        amount: "150g", p: 3,  c: 27, f: 0,  kcal: 120 },
+        { name: "Φασολάκια βρασμένα",   amount: "300g",         p: 6,  c: 18, f: 0,  kcal: 96  },
+        { name: "Αυγά βραστά",          amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Γιαούρτι 0%",          amount: "150g",         p: 13, c: 6,  f: 0,  kcal: 76  },
+        { name: "Ελαιόλαδο",            amount: "12ml",         p: 0,  c: 0,  f: 11, kcal: 100 },
+        { name: "Πατάτα βραστή",        amount: "150g",         p: 3,  c: 27, f: 0,  kcal: 120 },
       ]
     },
     dinner: {
       name: "Μπιφτέκια & σαλάτα",
       ingredients: [
-        { name: "Μοσχαρίσια μπιφτέκια", amount: "200g (3 τεμ)", p: 36, c: 2,  f: 14, kcal: 282 },
-        { name: "Γιαούρτι 2%",          amount: "80g",  p: 6,  c: 4,  f: 2,  kcal: 58  },
-        { name: "Κεφαλοτύρι τριμμένο",  amount: "20g",  p: 5,  c: 0,  f: 6,  kcal: 74  },
-        { name: "Σαλάτα λαχανικών",     amount: "200g", p: 3,  c: 8,  f: 0,  kcal: 44  },
-        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+        { name: "Μοσχαρίσια μπιφτέκια", amount: "250g (3 τεμ)", p: 45, c: 2,  f: 17, kcal: 345 },
+        { name: "Γιαούρτι 2%",          amount: "80g",          p: 6,  c: 4,  f: 2,  kcal: 58  },
+        { name: "Κεφαλοτύρι τριμμένο",  amount: "20g",          p: 5,  c: 0,  f: 6,  kcal: 74  },
+        { name: "Σαλάτα λαχανικών",     amount: "200g",         p: 3,  c: 8,  f: 0,  kcal: 44  },
+        { name: "Ελαιόλαδο",            amount: "10ml",         p: 0,  c: 0,  f: 9,  kcal: 84  },
       ]
     }
   },
-  // ── ΚΥΡΙΑΚΗ ──
+  // ── ΚΥΡΙΑΚΗ ── ~188g P
   {
     breakfast: {
       name: "Κυριακάτικο πρωινό",
       ingredients: [
         { name: "Αυγά scrambled",       amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Γιαούρτι 0%",          amount: "150g", p: 13, c: 6,  f: 0,  kcal: 76  },
-        { name: "Ψωμί ολικής",          amount: "80g",  p: 8,  c: 38, f: 2,  kcal: 202 },
-        { name: "Φρούτο",               amount: "150g", p: 1,  c: 20, f: 0,  kcal: 84  },
+        { name: "Γιαούρτι 0%",          amount: "200g",         p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Ψωμί ολικής",          amount: "80g",          p: 8,  c: 38, f: 2,  kcal: 202 },
+        { name: "Φρούτο",               amount: "150g",         p: 1,  c: 20, f: 0,  kcal: 84  },
       ]
     },
     snack: {
       name: "Γιαούρτι bowl",
       ingredients: [
-        { name: "Γιαούρτι 0%",          amount: "250g", p: 22, c: 10, f: 0,  kcal: 128 },
-        { name: "Μέλι",                 amount: "15g",  p: 0,  c: 12, f: 0,  kcal: 47  },
-        { name: "Granola ολικής",        amount: "30g",  p: 3,  c: 20, f: 4,  kcal: 128 },
+        { name: "Γιαούρτι 0%",          amount: "250g",         p: 22, c: 10, f: 0,  kcal: 128 },
+        { name: "Μέλι",                 amount: "15g",          p: 0,  c: 12, f: 0,  kcal: 47  },
+        { name: "Granola ολικής",        amount: "30g",          p: 3,  c: 20, f: 4,  kcal: 128 },
       ]
     },
     lunch: {
       name: "Μακαρονοσαλάτα Κυριακής",
       isLunch: true,
       ingredients: [
-        { name: "Μακαρόνια ολικής",     amount: "100g ωμά", p: 13, c: 70, f: 2, kcal: 348 },
-        { name: "Κοτόπουλο ψητό",       amount: "160g", p: 37, c: 0,  f: 4,  kcal: 188 },
-        { name: "Pesto & γιαούρτι",     amount: "30g",  p: 3,  c: 2,  f: 6,  kcal: 74  },
-        { name: "Αγγούρι & ντομάτα",    amount: "150g", p: 2,  c: 6,  f: 0,  kcal: 32  },
-        { name: "Ελαιόλαδο",            amount: "10ml", p: 0,  c: 0,  f: 9,  kcal: 84  },
+        { name: "Μακαρόνια ολικής",     amount: "100g ωμά",     p: 13, c: 70, f: 2,  kcal: 348 },
+        { name: "Κοτόπουλο ψητό",       amount: "200g",         p: 46, c: 0,  f: 5,  kcal: 233 },
+        { name: "Pesto & γιαούρτι",     amount: "30g",          p: 3,  c: 2,  f: 6,  kcal: 74  },
+        { name: "Αγγούρι & ντομάτα",    amount: "150g",         p: 2,  c: 6,  f: 0,  kcal: 32  },
+        { name: "Ελαιόλαδο",            amount: "10ml",         p: 0,  c: 0,  f: 9,  kcal: 84  },
       ]
     },
     dinner: {
       name: "Ελαφρύ βραδινό",
       ingredients: [
-        { name: "Αυγά βραστά",          amount: "3 τεμ (150g)", p: 19, c: 1,  f: 14, kcal: 209 },
-        { name: "Γιαούρτι 0%",          amount: "200g", p: 18, c: 8,  f: 0,  kcal: 104 },
-        { name: "Ρυζογκοφρέτες",        amount: "40g",  p: 3,  c: 30, f: 1,  kcal: 141 },
-        { name: "Μέλι",                 amount: "10g",  p: 0,  c: 8,  f: 0,  kcal: 32  },
+        { name: "Αυγά βραστά",          amount: "4 τεμ (200g)", p: 25, c: 1,  f: 18, kcal: 278 },
+        { name: "Γιαούρτι 0%",          amount: "200g",         p: 18, c: 8,  f: 0,  kcal: 104 },
+        { name: "Ρυζογκοφρέτες",        amount: "40g",          p: 3,  c: 30, f: 1,  kcal: 141 },
+        { name: "Μέλι",                 amount: "10g",          p: 0,  c: 8,  f: 0,  kcal: 32  },
       ]
     }
   },
@@ -738,10 +839,202 @@ function render() {
 
 render();
 
+
+// ── SHOPPING LIST ──
+const SHOP_CATEGORIES = [
+  {
+    emoji: "🥚",
+    name: "Αυγά & Γαλακτοκομικά",
+    items: [
+      { name: "Αυγά",               qty: "28-30 τεμ. (4 σκατούλες)" },
+      { name: "Γιαούρτι 0%",        qty: "~2.5 kg (5 κουτιά 500g)" },
+      { name: "Γιαούρτι 2%",        qty: "500g (1 κουτί)" },
+      { name: "Γάλα 1.5%",          qty: "1 λίτρο" },
+      { name: "Τυρί light",          qty: "200g" },
+      { name: "Κεφαλοτύρι τριμμένο", qty: "150g" },
+    ]
+  },
+  {
+    emoji: "🍗",
+    name: "Κρέας & Ψάρι",
+    items: [
+      { name: "Κοτόπουλο στήθος",   qty: "~1.4 kg (για 3 μέρες x 250g + μεσ.)" },
+      { name: "Σολομός φιλέτο",     qty: "~700g (250g + 200g + μεσ.)" },
+      { name: "Γαρίδες φρέσκες/κατεψ.", qty: "~700g (200g + 300g + μεσ.)" },
+      { name: "Μοσχαρίσιος κιμάς",  qty: "~700g (μπιφτέκια Σαββ.)" },
+      { name: "Μοσχαρίσιο κρέας",   qty: "~450g (220g Πέμπτη + 200g Κυρ.)" },
+    ]
+  },
+  {
+    emoji: "🥣",
+    name: "Δημητριακά & Ψωμί",
+    items: [
+      { name: "Βρόμη ολικής",        qty: "~320g (80g x 4 μέρες)" },
+      { name: "Ψωμί ολικής",         qty: "1 φραντζόλα (~600g)" },
+      { name: "Ρύζι καστανό",        qty: "~400g" },
+      { name: "Ρύζι λευκό",          qty: "~200g" },
+      { name: "Κινόα",               qty: "~300g" },
+      { name: "Μακαρόνια ολικής",    qty: "~400g (100g x 4 μέρες)" },
+      { name: "Κράκερς ολικής",      qty: "~100g" },
+      { name: "Ρυζογκοφρέτες",       qty: "~80g (1 πακέτο)" },
+      { name: "Granola ολικής",       qty: "~100g" },
+    ]
+  },
+  {
+    emoji: "🥦",
+    name: "Λαχανικά & Φρούτα",
+    items: [
+      { name: "Μπανάνες",            qty: "5-6 τεμ." },
+      { name: "Μήλα/Αχλάδια",        qty: "4-5 τεμ." },
+      { name: "Γλυκοπατάτα",         qty: "~400g (2 μεγάλες)" },
+      { name: "Πατάτες",             qty: "~700g" },
+      { name: "Ντομάτες",            qty: "500g" },
+      { name: "Αγγούρι",             qty: "2 τεμ." },
+      { name: "Λαχανικά εποχής μικτά", qty: "~1.5 kg (σαλάτες + ψητά)" },
+      { name: "Φασολάκια",           qty: "~600g" },
+      { name: "Φρούτο της επιλογής σου", qty: "3-4 τεμ. (σνακ)" },
+    ]
+  },
+  {
+    emoji: "🫘",
+    name: "Όσπρια & Κονσέρβες",
+    items: [
+      { name: "Φασόλια (βρασμένα/κονσέρβα)", qty: "~600g (2 κονσέρβες)" },
+    ]
+  },
+  {
+    emoji: "🫒",
+    name: "Λάδια, Σάλτσες & Άλλα",
+    items: [
+      { name: "Ελαιόλαδο",           qty: "~200ml (εβδομάδα)" },
+      { name: "Μέλι",                qty: "~150g (1 βαζάκι)" },
+      { name: "Pesto βασιλικού",     qty: "1 βαζάκι (~80g)" },
+      { name: "Αμύγδαλα",            qty: "~100g" },
+      { name: "Καρύδια",             qty: "~50g" },
+    ]
+  },
+];
+
+let checkedItems = JSON.parse(localStorage.getItem('shopChecked') || '{}');
+
+function renderShop() {
+  const container = document.getElementById('shop-categories');
+  container.innerHTML = '';
+  SHOP_CATEGORIES.forEach((cat, ci) => {
+    const div = document.createElement('div');
+    div.className = 'shop-category';
+    const header = `<div class="shop-cat-header"><span style="font-size:18px">${cat.emoji}</span><span class="shop-cat-title">${cat.name}</span></div>`;
+    const items = cat.items.map((item, ii) => {
+      const key = ci + '-' + ii;
+      const checked = checkedItems[key] ? ' checked' : '';
+      return `<div class="shop-item${checked}" onclick="toggleItem('${key}', this)">
+        <div class="shop-checkbox"></div>
+        <div class="shop-item-info">
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-qty">${item.qty}</div>
+        </div>
+      </div>`;
+    }).join('');
+    div.innerHTML = header + items;
+    container.appendChild(div);
+  });
+}
+
+function toggleItem(key, el) {
+  el.classList.toggle('checked');
+  if (el.classList.contains('checked')) {
+    checkedItems[key] = true;
+  } else {
+    delete checkedItems[key];
+  }
+  try { localStorage.setItem('shopChecked', JSON.stringify(checkedItems)); } catch(e) {}
+}
+
+function resetChecks() {
+  checkedItems = {};
+  try { localStorage.setItem('shopChecked', '{}'); } catch(e) {}
+  renderShop();
+}
+
+function exportToNotes() {
+  let text = "🛒 Shopping List - Mike's Meal Plan\n";
+  text += "================================\n\n";
+  SHOP_CATEGORIES.forEach(cat => {
+    text += cat.emoji + " " + cat.name + "\n";
+    cat.items.forEach(item => {
+      text += "☐ " + item.name + " — " + item.qty + "\n";
+    });
+    text += "\n";
+  });
+  // Try Web Share API first (mobile)
+  if (navigator.share) {
+    navigator.share({ title: "Shopping List", text: text }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  alert('✅ Αντιγράφηκε! Κόλλα σε Notes, Telegram ή όπου θέλεις.');
+}
+
+// ── PAGE NAVIGATION ──
+function showPage(page) {
+  const planPage = document.querySelector('.main:not(#shop-page)');
+  const shopPage = document.getElementById('shop-page');
+  const header = document.querySelector('.header');
+  document.getElementById('nav-plan').classList.toggle('active', page === 'plan');
+  document.getElementById('nav-shop').classList.toggle('active', page === 'shop');
+  if (page === 'plan') {
+    planPage.style.display = '';
+    header.style.display = '';
+    shopPage.style.display = 'none';
+  } else {
+    planPage.style.display = 'none';
+    header.style.display = 'none';
+    shopPage.style.display = 'block';
+    renderShop();
+  }
+}
+
 // PWA service worker registration
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
+
+<!-- SHOP PAGE -->
+<div id="shop-page" class="main" style="padding-top:16px">
+  <div class="shop-header">
+    <div>
+      <div class="card-label">Εβδομαδιαία</div>
+      <div style="font-size:18px;font-weight:800;color:#fff">Shopping List 🛒</div>
+    </div>
+    <button class="export-btn" onclick="exportToNotes()">📤 Export</button>
+  </div>
+  <div id="shop-categories"></div>
+  <button class="shop-reset-btn" onclick="resetChecks()">↺ Επαναφορά λίστας</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-plan" onclick="showPage('plan')">
+    <span class="nav-icon">🍽️</span>
+    <span>Πρόγραμμα</span>
+  </button>
+  <button class="nav-btn" id="nav-shop" onclick="showPage('shop')">
+    <span class="nav-icon">🛒</span>
+    <span>Shopping</span>
+  </button>
+</div>
+
 </body>
 </html>
