@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workout Tracker</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #21262d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #f78166;
+    --yellow: #e3b341;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --cyan: #00d4ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 16px; font-weight: 600; }
+
+  .day-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 16px 16px 0;
+    max-width: 700px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  main { max-width: 700px; margin: 0 auto; padding: 16px 16px 80px; }
+
+  .day-panel { display: none; }
+  .day-panel.active { display: block; }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    margin-top: 8px;
+  }
+  .day-title { font-size: 20px; font-weight: 700; }
+  .day-progress { font-size: 13px; color: var(--muted); }
+  .progress-bar-wrap { height: 4px; background: var(--surface2); border-radius: 99px; margin-bottom: 20px; }
+  .progress-bar-fill { height: 100%; border-radius: 99px; background: var(--green); transition: width .4s; }
+
+  .exercise-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .exercise-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .exercise-header:hover { background: var(--surface2); }
+  .ex-check {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+    transition: all .15s;
+  }
+  .ex-check.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .ex-check.partial { background: var(--yellow); border-color: var(--yellow); color: #000; }
+  .ex-name { flex: 1; font-size: 15px; font-weight: 600; }
+  .ex-sets-summary { font-size: 12px; color: var(--muted); }
+  .ex-chevron { color: var(--muted); font-size: 12px; transition: transform .2s; }
+  .exercise-card.open .ex-chevron { transform: rotate(180deg); }
+
+  .sets-body { display: none; border-top: 1px solid var(--border); }
+  .exercise-card.open .sets-body { display: block; }
+
+  .set-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1fr 1fr 36px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .set-row:last-child { border-bottom: none; }
+  .set-row.completed { opacity: .6; }
+  .set-num { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .set-label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 2px; }
+  .set-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 5px 8px;
+    width: 100%;
+    text-align: center;
+    outline: none;
+  }
+  .set-input:focus { border-color: var(--accent); }
+  .set-done-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .set-done-btn:hover { border-color: var(--green); color: var(--green); }
+  .set-done-btn.done { background: var(--green); border-color: var(--green); color: #fff; }
+
+  .note-row {
+    padding: 8px 14px 10px;
+    font-size: 12px;
+    color: var(--orange);
+    font-style: italic;
+    border-top: 1px solid var(--border);
+  }
+
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .day-done-banner {
+    display: none;
+    background: rgba(63,185,80,.12);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    color: var(--green);
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+  .day-done-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💪 Workout Tracker</h1>
+  <button class="reset-btn" onclick="resetDay()">Reset ημέρας</button>
+</header>
+
+<div class="day-tabs" id="tabs"></div>
+<main id="app"></main>
+
+<script>
+const DAYS = [
+  {
+    id: 'push',
+    label: 'PUSH',
+    color: '#f78166',
+    exercises: [
+      {
+        name: 'Chest Press μπάρα',
+        sets: [
+          { label: 'Warm-up', kg: 85, reps: '5', note: '' },
+          { label: 'Set 1', kg: 82.5, reps: '5', note: '' },
+          { label: 'Set 2', kg: 82.5, reps: '5', note: '' },
+          { label: 'Set 3', kg: 82.5, reps: '5', note: '' },
+        ]
+      },
+      {
+        name: 'Incline Smith Press',
+        note: '1 θέση πάνω · rest 25" drop at 30 and fail',
+        sets: [
+          { label: 'Set 1', kg: 50, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 50, reps: '8-10', note: '' },
+          { label: 'Set 3', kg: 47.5, reps: '10-12', note: '' },
+          { label: 'Drop', kg: 40, reps: '12', note: '' },
+        ]
+      },
+      {
+        name: 'Lateral Raises DB',
+        note: 'Drop at 5 and do 15',
+        sets: [
+          { label: 'Set 1', kg: 12.5, reps: '10-12', note: '' },
+          { label: 'Set 2', kg: 7.5, reps: '15-20', note: '' },
+          { label: 'Set 3', kg: 15, reps: '8-10', note: '' },
+        ]
+      },
+      {
+        name: 'Dips',
+        sets: [
+          { label: 'Set 1', kg: 15, reps: '8', note: '' },
+          { label: 'Set 2', kg: 15, reps: '8', note: '' },
+          { label: 'Set 3', kg: 15, reps: '8', note: '' },
+          { label: 'BW', kg: 0, reps: '20', note: 'Χωρίς βάρος' },
+        ]
+      },
+      {
+        name: 'Scale Crashers',
+        sets: [
+          { label: 'Set 1', kg: 30, reps: '12', note: '' },
+          { label: 'Set 2', kg: 35, reps: '10', note: '' },
+          { label: 'Set 3', kg: 40, reps: '8', note: '' },
+          { label: 'Set 4', kg: 40, reps: '8', note: '' },
+        ]
+      },
+      {
+        name: 'Tricep Pushdowns (rope)',
+        sets: [
+          { label: 'Set 1', kg: 45, reps: '8', note: '' },
+          { label: 'Set 2', kg: 40, reps: '10-12', note: '' },
+          { label: 'Set 3', kg: 30, reps: '15', note: '' },
+        ]
+      },
+      {
+        name: 'ABS Machine',
+        note: '📸 Στείλε φωτό για οδηγίες',
+        sets: [
+          { label: 'Set 1', kg: 0, reps: '–', note: '' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'pull',
+    label: 'PULL',
+    color: '#58a6ff',
+    exercises: [
+      {
+        name: 'Pull Ups (κανονική λαβή)',
+        sets: [
+          { label: 'Set 1', kg: 20, reps: '5-7', note: '' },
+          { label: 'Set 2', kg: 20, reps: '5-7', note: '' },
+          { label: 'Set 3', kg: 20, reps: '5-7', note: '' },
+        ]
+      },
+      {
+        name: 'Lat Pulldown',
+        sets: [
+          { label: 'Set 1', kg: 65, reps: '12', note: '' },
+          { label: 'Set 2', kg: 65, reps: '12', note: '' },
+        ]
+      },
+      {
+        name: 'Deficit Bent Over Row',
+        sets: [
+          { label: 'Set 1', kg: 70, reps: '8', note: '' },
+          { label: 'Set 2', kg: 55, reps: '12', note: '' },
+          { label: 'Set 3', kg: 40, reps: '15', note: '' },
+        ]
+      },
+      {
+        name: 'T-Bar Row machine',
+        note: 'Rest 25" · ίδιο βάρος μέχρι fail',
+        sets: [
+          { label: 'Set 1', kg: 60, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 50, reps: '10-12', note: '' },
+          { label: 'Set 3', kg: 40, reps: '15', note: '' },
+        ]
+      },
+      {
+        name: 'Straight Bar Curls',
+        note: 'Ανοιχτή λαβή · superset: αδειάζεις μπάρα, αλλάζεις λαβή, ανάποδη λαβή μέχρι fail',
+        sets: [
+          { label: 'Set 1', kg: 32.5, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 25, reps: '12-15', note: '' },
+          { label: 'Set 3', kg: 20, reps: '12', note: '' },
+          { label: 'Set 4', kg: 20, reps: '12', note: '' },
+        ]
+      },
+      {
+        name: 'Cable Hammer Curl (σχοινί)',
+        sets: [
+          { label: 'Set 1', kg: 45, reps: '10-12', note: '' },
+          { label: 'Set 2', kg: 40, reps: '15', note: '' },
+          { label: 'Set 3', kg: 35, reps: '20', note: '' },
+        ]
+      },
+      {
+        name: 'Πήχης – Wrist Plate Curls',
+        sets: [
+          { label: 'Set 1', kg: 10, reps: 'FAIL', note: '' },
+          { label: 'Set 2', kg: 10, reps: 'FAIL', note: '' },
+        ]
+      },
+      {
+        name: 'Πήχης – Reverse Wrist Curls DB',
+        sets: [
+          { label: 'Set 1', kg: 5, reps: 'FAIL', note: '' },
+          { label: 'Set 2', kg: 5, reps: 'FAIL', note: '' },
+        ]
+      },
+      {
+        name: 'Chin Ups',
+        sets: [
+          { label: 'Set 1', kg: 0, reps: '15', note: 'BW' },
+        ]
+      },
+      {
+        name: 'Ραχιαίοι μηχάνημα',
+        sets: [
+          { label: 'Set 1', kg: 0, reps: '15', note: '' },
+          { label: 'Set 2', kg: 0, reps: '15', note: '' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'legs',
+    label: 'LEGS',
+    color: '#3fb950',
+    exercises: [
+      {
+        name: 'Απαγωγοί',
+        sets: [
+          { label: 'Set 1', kg: 55, reps: '12-15', note: '' },
+          { label: 'Set 2', kg: 50, reps: 'FAIL', note: '' },
+        ]
+      },
+      {
+        name: 'Smith Squats',
+        note: 'το έχουμε;;;',
+        sets: [
+          { label: 'Set 1', kg: 70, reps: '6-8', note: '' },
+          { label: 'Set 2', kg: 80, reps: '5-7', note: '' },
+          { label: 'Set 3', kg: 90, reps: '5-7', note: '' },
+          { label: 'Set 4', kg: 90, reps: '5-7', note: '' },
+          { label: 'Set 5', kg: 90, reps: '5-7', note: '' },
+        ]
+      },
+      {
+        name: 'Calf Raises Smith',
+        sets: [
+          { label: 'Set 1', kg: 60, reps: '10-12', note: '' },
+          { label: 'Set 2', kg: 50, reps: '15-20', note: '' },
+          { label: 'BW', kg: 0, reps: 'FAIL', note: 'Χωρίς βάρος' },
+        ]
+      },
+      {
+        name: 'Leg Extension',
+        sets: [
+          { label: 'Set 1', kg: 60, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 60, reps: '8-10', note: '' },
+          { label: 'Set 3', kg: 40, reps: '12-15', note: '' },
+          { label: 'Set 4', kg: 30, reps: '20', note: '' },
+        ]
+      },
+      {
+        name: 'RDL DB',
+        sets: [
+          { label: 'Set 1', kg: 35, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 30, reps: '12-15', note: '' },
+          { label: 'Set 3', kg: 22.5, reps: '15-20', note: '' },
+        ]
+      },
+      {
+        name: 'GHD Sit Ups',
+        sets: [
+          { label: 'Set 1', kg: 0, reps: 'FAIL', note: '' },
+          { label: 'Set 2', kg: 0, reps: 'FAIL', note: '' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'upper',
+    label: 'UPPER',
+    color: '#bc8cff',
+    exercises: [
+      {
+        name: 'Smith Shoulder Press',
+        sets: [
+          { label: 'Set 1', kg: 45, reps: '6-8', note: '' },
+          { label: 'Set 2', kg: 50, reps: '6-8', note: '' },
+          { label: 'Set 3', kg: 55, reps: '5', note: '' },
+          { label: 'Set 4', kg: 57.5, reps: '5', note: '' },
+          { label: 'Back-off', kg: 30, reps: '15', note: '' },
+        ]
+      },
+      {
+        name: 'Lat Pulldown (μικρή μαύρη λαβή)',
+        sets: [
+          { label: 'Set 1', kg: 80, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 75, reps: '10-12', note: '' },
+          { label: 'Set 3', kg: 65, reps: '15', note: '' },
+        ]
+      },
+      {
+        name: 'Incline DB Press (1 θέση πάνω)',
+        sets: [
+          { label: 'Set 1', kg: 25, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 22.5, reps: '10-12', note: '' },
+          { label: 'Set 3', kg: 17.5, reps: '15', note: '2 θέσεις πάνω' },
+        ]
+      },
+      {
+        name: 'Deadlift',
+        sets: [
+          { label: 'Set 1', kg: 100, reps: '5', note: '' },
+          { label: 'Set 2', kg: 105, reps: '3', note: '' },
+          { label: 'Back-off', kg: 85, reps: '6-8', note: '' },
+        ]
+      },
+      {
+        name: 'DB Curls (καλή περιστροφή)',
+        sets: [
+          { label: 'Set 1', kg: 20, reps: '8-10', note: '' },
+          { label: 'Set 2', kg: 17.5, reps: '12-15', note: '' },
+          { label: 'Set 3', kg: 12.5, reps: 'FAIL', note: '' },
+        ]
+      },
+      {
+        name: 'Tricep Pushdowns (straight bar)',
+        sets: [
+          { label: 'Set 1', kg: 40, reps: '10-12', note: '' },
+          { label: 'Set 2', kg: 35, reps: '12-15', note: '' },
+          { label: 'Set 3', kg: 25, reps: '20', note: '' },
+        ]
+      },
+    ]
+  }
+];
+
+// ── State ──
+function stateKey(dayId) { return 'workout_' + dayId; }
+function loadState(dayId) {
+  try { return JSON.parse(localStorage.getItem(stateKey(dayId))) || {}; } catch { return {}; }
+}
+function saveState(dayId, state) {
+  try { localStorage.setItem(stateKey(dayId), JSON.stringify(state)); } catch {}
+}
+
+let activeDayIdx = 0;
+
+// ── Render ──
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = DAYS.map((d, i) => `
+    <div class="tab ${i === activeDayIdx ? 'active' : ''}" onclick="switchDay(${i})"
+      style="${i === activeDayIdx ? `background:${d.color};border-color:${d.color}` : ''}">
+      ${d.label}
+    </div>`).join('');
+}
+
+function renderDay(idx) {
+  const day = DAYS[idx];
+  const state = loadState(day.id);
+  const app = document.getElementById('app');
+
+  let totalSets = 0, doneSets = 0;
+  day.exercises.forEach((ex, ei) => {
+    ex.sets.forEach((s, si) => {
+      totalSets++;
+      if (state[`${ei}_${si}_done`]) doneSets++;
+    });
+  });
+
+  const pct = totalSets ? Math.round(doneSets / totalSets * 100) : 0;
+  const allDone = doneSets === totalSets && totalSets > 0;
+
+  let html = `
+    <div class="day-done-banner ${allDone ? 'show' : ''}">🎉 Προπόνηση ολοκληρωμένη! Μπράβο!</div>
+    <div class="day-header">
+      <div class="day-title" style="color:${day.color}">${day.label}</div>
+      <div class="day-progress">${doneSets} / ${totalSets} sets</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" style="width:${pct}%;background:${day.color}"></div>
+    </div>`;
+
+  day.exercises.forEach((ex, ei) => {
+    const setsDone = ex.sets.filter((s, si) => state[`${ei}_${si}_done`]).length;
+    const allExDone = setsDone === ex.sets.length;
+    const partialDone = setsDone > 0 && !allExDone;
+    const isOpen = state[`${ei}_open`] !== false && !allExDone;
+
+    html += `
+      <div class="exercise-card ${isOpen ? 'open' : ''}" id="ex-${idx}-${ei}">
+        <div class="exercise-header" onclick="toggleEx(${idx},${ei})">
+          <div class="ex-check ${allExDone ? 'done' : partialDone ? 'partial' : ''}">
+            ${allExDone ? '✓' : partialDone ? setsDone : ''}
+          </div>
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-sets-summary">${setsDone}/${ex.sets.length} sets</div>
+          <div class="ex-chevron">▼</div>
+        </div>
+        <div class="sets-body">
+          <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 36px;gap:8px;padding:6px 14px 2px;border-bottom:1px solid var(--border)">
+            <div></div>
+            <div style="font-size:11px;color:var(--muted)">Set</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center">Κιλά</div>
+            <div style="font-size:11px;color:var(--muted);text-align:center">Επαν.</div>
+            <div></div>
+          </div>`;
+
+    ex.sets.forEach((s, si) => {
+      const done = !!state[`${ei}_${si}_done`];
+      const kg = state[`${ei}_${si}_kg`] !== undefined ? state[`${ei}_${si}_kg`] : s.kg;
+      const reps = state[`${ei}_${si}_reps`] !== undefined ? state[`${ei}_${si}_reps`] : s.reps;
+      html += `
+          <div class="set-row ${done ? 'completed' : ''}" id="row-${idx}-${ei}-${si}">
+            <div class="set-num">${s.label.replace('Set ','')}</div>
+            <div style="font-size:12px;color:var(--muted)">${s.label}</div>
+            <input class="set-input" type="text" value="${kg}" placeholder="kg"
+              onchange="updateField(${idx},${ei},${si},'kg',this.value)"
+              ${done ? 'disabled' : ''}>
+            <input class="set-input" type="text" value="${reps}" placeholder="reps"
+              onchange="updateField(${idx},${ei},${si},'reps',this.value)"
+              ${done ? 'disabled' : ''}>
+            <button class="set-done-btn ${done ? 'done' : ''}"
+              onclick="toggleSetDone(${idx},${ei},${si})">✓</button>
+          </div>`;
+    });
+
+    if (ex.note) {
+      html += `<div class="note-row">📌 ${ex.note}</div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  app.innerHTML = html;
+}
+
+function render() {
+  renderTabs();
+  renderDay(activeDayIdx);
+}
+
+function switchDay(idx) {
+  activeDayIdx = idx;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function toggleEx(dayIdx, ei) {
+  const day = DAYS[dayIdx];
+  const state = loadState(day.id);
+  state[`${ei}_open`] = !document.getElementById(`ex-${dayIdx}-${ei}`).classList.contains('open');
+  saveState(day.id, state);
+  render();
+}
+
+function updateField(dayIdx, ei, si, field, value) {
+  const day = DAYS[dayIdx];
+  const state = loadState(day.id);
+  state[`${ei}_${si}_${field}`] = value;
+  saveState(day.id, state);
+}
+
+function toggleSetDone(dayIdx, ei, si) {
+  const day = DAYS[dayIdx];
+  const state = loadState(day.id);
+  state[`${ei}_${si}_done`] = !state[`${ei}_${si}_done`];
+  // auto-close exercise if all sets done
+  const ex = day.exercises[ei];
+  const allDone = ex.sets.every((s, i) => state[`${ei}_${i}_done`]);
+  if (allDone) state[`${ei}_open`] = false;
+  saveState(day.id, state);
+  render();
+}
+
+function resetDay() {
+  const day = DAYS[activeDayIdx];
+  if (confirm('Να γίνει reset η ημέρα ' + day.label + ';')) {
+    localStorage.removeItem(stateKey(day.id));
+    render();
+  }
+}
+
+render();
+</script>
+</body>
+</html>
