@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meal Tracker</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #21262d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --cyan: #00d4ff;
+    --green: #3fb950;
+    --orange: #f78166;
+    --yellow: #e3b341;
+    --red: #f85149;
+    --accent: #58a6ff;
+    --protein-color: #3fb950;
+    --carbs-color: #00d4ff;
+    --fat-color: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 16px; font-weight: 600; color: var(--text); }
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .date-nav button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .date-nav button:hover { background: var(--border); }
+  #user-badge {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  #logout-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  main { max-width: 640px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  /* ── Daily Summary ── */
+  .daily-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .macros-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .macro-cell { text-align: center; }
+  .macro-val {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .macro-val.kcal { color: var(--yellow); }
+  .macro-val.protein { color: var(--green); }
+  .macro-val.carbs { color: var(--cyan); }
+  .macro-val.fat { color: var(--orange); }
+  .macro-unit { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .macro-name { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .progress-section { display: flex; flex-direction: column; gap: 10px; }
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .progress-name { font-size: 13px; color: var(--text); width: 120px; flex-shrink: 0; }
+  .progress-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+  .progress-bar.protein { background: var(--protein-color); }
+  .progress-bar.carbs { background: var(--carbs-color); }
+  .progress-bar.fat { background: var(--fat-color); }
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    width: 80px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .goals-line {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .goals-line strong { color: var(--text); }
+
+  /* ── Meal Cards ── */
+  .meal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .meal-card-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .meal-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .meal-icon.breakfast { background: linear-gradient(135deg, #ff9a56, #ffb347); }
+  .meal-icon.lunch { background: linear-gradient(135deg, #56cfb2, #2ecc71); }
+  .meal-icon.dinner { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .meal-icon.snack { background: linear-gradient(135deg, #f093fb, #f5576c); }
+
+  .meal-title-wrap { flex: 1; }
+  .meal-title { font-size: 15px; font-weight: 600; }
+  .meal-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .meal-kcal {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--yellow);
+    background: rgba(227,179,65,.12);
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+  .meal-macros-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .badge.p { background: rgba(63,185,80,.18); color: var(--protein-color); }
+  .badge.c { background: rgba(0,212,255,.18); color: var(--cyan); }
+  .badge.f { background: rgba(248,81,73,.18); color: var(--red); }
+
+  .meal-foods {
+    border-top: 1px solid var(--border);
+    padding: 0 16px 14px;
+  }
+  .food-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .food-row:last-child { border-bottom: none; }
+  .food-name { font-size: 14px; color: var(--text); }
+  .food-right { text-align: right; }
+  .food-amount { font-size: 14px; font-weight: 600; color: var(--text); }
+  .food-macros-small { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .food-kcal-small { font-size: 12px; color: var(--muted); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* ── Login ── */
+  .login-wrap {
+    max-width: 360px;
+    margin: 80px auto 0;
+    padding: 0 16px;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+  }
+  .login-card h2 { font-size: 18px; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .btn-primary:hover { opacity: .9; }
+  .error-msg { font-size: 13px; color: var(--red); margin-top: 10px; display: none; }
+  .error-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🥗 Meal Tracker</h1>
+  <div class="date-nav">
+    <button id="prev-day">‹</button>
+    <span id="date-label"></span>
+    <button id="next-day">›</button>
+  </div>
+  <div id="user-badge"></div>
+</header>
+
+<main id="app"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://ezujjualnaymadpjjkom.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dWpqdWFsbmF5bWFkcGpqa29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjAyOTYsImV4cCI6MjEwMzM5NjI5Nn0.swZqGIJwrW0QgnbnftCsBcV3snYJbRS-IIh744499nc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Goals
+const GOALS = { kcal: 1800, protein: 160, carbs: 140, fat: 67 };
+
+// No login required — reads directly via anon key (RLS must allow select)
+
+const MEAL_LABELS = {
+  breakfast: 'Πρωινό',
+  lunch: 'Μεσημεριανό',
+  dinner: 'Βραδινό',
+  snack: 'Σνακ'
+};
+const MEAL_ICONS = {
+  breakfast: '🌅',
+  lunch: '☀️',
+  dinner: '🌙',
+  snack: '🍎'
+};
+
+let currentDate = new Date();
+currentDate.setHours(0,0,0,0);
+let channel = null;
+
+// ── Date helpers ──
+function toDateStr(d) {
+  return d.toISOString().slice(0,10);
+}
+function formatDateLabel(d) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = (d - today) / 86400000;
+  if (diff === 0) return 'Σήμερα';
+  if (diff === -1) return 'Χθες';
+  return d.toLocaleDateString('el-GR', { weekday:'short', day:'numeric', month:'short' });
+}
+function updateDateLabel() {
+  document.getElementById('date-label').textContent = formatDateLabel(currentDate);
+  const today = new Date(); today.setHours(0,0,0,0);
+  document.getElementById('next-day').disabled = currentDate >= today;
+}
+
+document.getElementById('prev-day').onclick = () => {
+  currentDate.setDate(currentDate.getDate() - 1);
+  updateDateLabel();
+  loadDay();
+};
+document.getElementById('next-day').onclick = () => {
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (currentDate < today) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    updateDateLabel();
+    loadDay();
+  }
+};
+
+// ── Parse notes into food items ──
+function parseNotes(notes) {
+  if (!notes) return [];
+  // Format: "410g Total 0%, 21g Calve φυστικοβούτυρο, 30g μέλι, 90g μπανάνα"
+  return notes.split(',').map(s => s.trim()).filter(Boolean).map(item => {
+    const m = item.match(/^(\d+(?:\.\d+)?)g\s+(.+)$/);
+    if (m) return { amount: m[1] + 'g', name: m[2] };
+    return { amount: '', name: item };
+  });
+}
+
+// ── Render ──
+function renderDay(meals) {
+  const app = document.getElementById('app');
+
+  // Totals
+  const totals = meals.reduce((a, m) => ({
+    kcal: a.kcal + (m.kcal||0),
+    protein: a.protein + parseFloat(m.protein_g||0),
+    carbs: a.carbs + parseFloat(m.carbs_g||0),
+    fat: a.fat + parseFloat(m.fat_g||0)
+  }), { kcal:0, protein:0, carbs:0, fat:0 });
+
+  const pct = (v, goal) => Math.min(100, Math.round(v/goal*100));
+
+  // Group by meal_type preserving order
+  const order = ['breakfast','lunch','snack','dinner'];
+  const grouped = {};
+  for (const m of meals) {
+    const t = m.meal_type || 'snack';
+    if (!grouped[t]) grouped[t] = [];
+    grouped[t].push(m);
+  }
+
+  let mealHtml = '';
+  const types = order.filter(t => grouped[t]);
+  // also add any unknown types
+  for (const t of Object.keys(grouped)) {
+    if (!order.includes(t)) types.push(t);
+  }
+
+  for (const type of types) {
+    const items = grouped[type];
+    const mTotal = items.reduce((a,m) => ({
+      kcal: a.kcal+(m.kcal||0),
+      p: a.p+parseFloat(m.protein_g||0),
+      c: a.c+parseFloat(m.carbs_g||0),
+      f: a.f+parseFloat(m.fat_g||0)
+    }), {kcal:0,p:0,c:0,f:0});
+
+    // Build foods from notes of all items in this meal type
+    let foodsHtml = '';
+    for (const m of items) {
+      const foods = parseNotes(m.notes);
+      if (foods.length > 0) {
+        for (const food of foods) {
+          foodsHtml += `
+            <div class="food-row">
+              <div class="food-name">${esc(food.name)}</div>
+              <div class="food-right">
+                <div class="food-amount">${esc(food.amount)}</div>
+              </div>
+            </div>`;
+        }
+      } else {
+        // fallback: show description as single item
+        foodsHtml += `
+          <div class="food-row">
+            <div class="food-name">${esc(m.description || type)}</div>
+            <div class="food-right">
+              <div class="food-kcal-small">${m.kcal} kcal</div>
+            </div>
+          </div>`;
+      }
+    }
+
+    // Time from logged_at of first item
+    const firstLogged = items[0].logged_at;
+    const timeStr = firstLogged
+      ? new Date(firstLogged).toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Athens'})
+      : '';
+
+    const label = MEAL_LABELS[type] || type;
+    const icon = MEAL_ICONS[type] || '🍽️';
+
+    mealHtml += `
+      <div class="meal-card">
+        <div class="meal-card-header" onclick="toggleCard(this)">
+          <div class="meal-icon ${type}">${icon}</div>
+          <div class="meal-title-wrap">
+            <div class="meal-title">${label}</div>
+            <div class="meal-macros-badges">
+              <span class="badge p">P: ${Math.round(mTotal.p)}g</span>
+              <span class="badge c">C: ${Math.round(mTotal.c)}g</span>
+              <span class="badge f">F: ${Math.round(mTotal.f)}g</span>
+            </div>
+          </div>
+          <div class="meal-kcal">${mTotal.kcal} kcal</div>
+        </div>
+        <div class="meal-foods">${foodsHtml}</div>
+      </div>`;
+  }
+
+  if (!types.length) {
+    mealHtml = `<div class="empty-state">Δεν έχεις καταχωρήσει γεύματα για αυτή τη μέρα.</div>`;
+  }
+
+  app.innerHTML = `
+    <div class="daily-summary">
+      <div class="summary-label">Ημερήσια Σύνολα</div>
+      <div class="macros-row">
+        <div class="macro-cell">
+          <div class="macro-val kcal">${Math.round(totals.kcal)}</div>
+          <div class="macro-unit">kcal</div>
+          <div class="macro-name">Θερμίδες</div>
+        </div>
+        <div class="macro-cell">
+          <div class="macro-val protein">${Math.round(totals.protein)}</div>
+          <div class="macro-unit">g</div>
+          <div class="macro-name">Πρωτεΐνη</div>
+        </div>
+        <div class="macro-cell">
+          <div class="macro-val carbs">${Math.round(totals.carbs)}</div>
+          <div class="macro-unit">g</div>
+          <div class="macro-name">Υδατ/κες</div>
+        </div>
+        <div class="macro-cell">
+          <div class="macro-val fat">${Math.round(totals.fat)}</div>
+          <div class="macro-unit">g</div>
+          <div class="macro-name">Λίπος</div>
+        </div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-row">
+          <div class="progress-name">Πρωτεΐνη</div>
+          <div class="progress-bar-wrap"><div class="progress-bar protein" style="width:${pct(totals.protein,GOALS.protein)}%"></div></div>
+          <div class="progress-label">${Math.round(totals.protein)} / ${GOALS.protein}g</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-name">Υδατάνθρακες</div>
+          <div class="progress-bar-wrap"><div class="progress-bar carbs" style="width:${pct(totals.carbs,GOALS.carbs)}%"></div></div>
+          <div class="progress-label">${Math.round(totals.carbs)} / ${GOALS.carbs}g</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-name">Λίπος</div>
+          <div class="progress-bar-wrap"><div class="progress-bar fat" style="width:${pct(totals.fat,GOALS.fat)}%"></div></div>
+          <div class="progress-label">${Math.round(totals.fat)} / ${GOALS.fat}g</div>
+        </div>
+      </div>
+      <div class="goals-line">
+        Στόχος: <strong>${GOALS.kcal} kcal</strong> · <strong>${GOALS.protein}g P</strong> · <strong>${GOALS.carbs}g C</strong> · <strong>${GOALS.fat}g F</strong>
+      </div>
+    </div>
+    ${mealHtml}`;
+}
+
+function toggleCard(header) {
+  const foods = header.nextElementSibling;
+  foods.style.display = foods.style.display === 'none' ? '' : 'none';
+}
+
+function esc(s) {
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Load ──
+async function loadDay() {
+  const dateStr = toDateStr(currentDate);
+  const { data, error } = await sb
+    .from('meals')
+    .select('*')
+    .eq('meal_date', dateStr)
+    .order('logged_at');
+
+  renderDay(data || []);
+}
+
+// ── Realtime ──
+function subscribe() {
+  if (channel) return;
+  channel = sb.channel('meals-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'meals' }, () => {
+      loadDay();
+    })
+    .subscribe();
+}
+
+async function init() {
+  updateDateLabel();
+  await loadDay();
+  subscribe();
+}
+
+init();
+</script>
+</body>
+</html>
