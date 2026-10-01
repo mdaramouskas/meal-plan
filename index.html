@@ -1,1290 +1,554 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#0d0d1a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Mike's Diet" />
-  <title>Mike's Meal Plan</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meal Tracker</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #21262d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --cyan: #00d4ff;
+    --green: #3fb950;
+    --orange: #f78166;
+    --yellow: #e3b341;
+    --red: #f85149;
+    --accent: #58a6ff;
+    --protein-color: #3fb950;
+    --carbs-color: #00d4ff;
+    --fat-color: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 16px; font-weight: 600; color: var(--text); }
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .date-nav button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .date-nav button:hover { background: var(--border); }
+  #user-badge {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  #logout-btn:hover { color: var(--text); border-color: var(--muted); }
 
-    :root {
-      --bg: #0d0d1a;
-      --bg2: #111122;
-      --bg3: #0a1628;
-      --border: #1e1e33;
-      --text: #e8e8e8;
-      --muted: #888;
-      --dim: #444;
-      --accent: #4ecdc4;
-      --gold: #f0a500;
-      --red: #ff6b6b;
-      --blue: #45b7d1;
-      --green: #5cb85c;
-    }
+  main { max-width: 640px; margin: 0 auto; padding: 20px 16px 80px; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      padding-bottom: 32px;
-    }
+  /* ── Daily Summary ── */
+  .daily-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .summary-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .macros-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .macro-cell { text-align: center; }
+  .macro-val {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .macro-val.kcal { color: var(--yellow); }
+  .macro-val.protein { color: var(--green); }
+  .macro-val.carbs { color: var(--cyan); }
+  .macro-val.fat { color: var(--orange); }
+  .macro-unit { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .macro-name { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-    /* HEADER */
-    .header {
-      background: linear-gradient(180deg, #0a0a18 0%, var(--bg) 100%);
-      padding: 48px 16px 20px;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-    }
-    .header-tag {
-      font-size: 10px;
-      letter-spacing: 3px;
-      color: var(--accent);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .header h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.5px;
-    }
-    .header-sub {
-      font-size: 11px;
-      color: var(--dim);
-      margin-top: 4px;
-    }
+  .progress-section { display: flex; flex-direction: column; gap: 10px; }
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .progress-name { font-size: 13px; color: var(--text); width: 120px; flex-shrink: 0; }
+  .progress-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+  .progress-bar.protein { background: var(--protein-color); }
+  .progress-bar.carbs { background: var(--carbs-color); }
+  .progress-bar.fat { background: var(--fat-color); }
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    width: 80px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .goals-line {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .goals-line strong { color: var(--text); }
 
-    /* MAIN */
-    .main { padding: 16px; max-width: 480px; margin: 0 auto; }
+  /* ── Meal Cards ── */
+  .meal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .meal-card-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .meal-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .meal-icon.breakfast { background: linear-gradient(135deg, #ff9a56, #ffb347); }
+  .meal-icon.lunch { background: linear-gradient(135deg, #56cfb2, #2ecc71); }
+  .meal-icon.dinner { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .meal-icon.snack { background: linear-gradient(135deg, #f093fb, #f5576c); }
 
-    /* MACROS CARD */
-    .macros-card {
-      background: var(--bg2);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .card-label {
-      font-size: 10px;
-      color: var(--dim);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-bottom: 12px;
-    }
-    .macro-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-    .macro-item { text-align: center; }
-    .macro-val {
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .macro-unit { font-size: 9px; color: var(--dim); margin-top: 2px; }
-    .macro-name { font-size: 9px; color: var(--muted); margin-top: 1px; }
-    .macro-bar-wrap { margin-bottom: 8px; }
-    .macro-bar-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-    .macro-bar-row span:first-child { color: var(--muted); }
-    .bar-bg {
-      background: #1a1a2e;
-      border-radius: 4px;
-      height: 5px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 5px;
-      border-radius: 4px;
-      transition: width 0.4s ease;
-    }
-    .target-note {
-      font-size: 10px;
-      color: var(--dim);
-      text-align: center;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-    }
-    .target-note span { color: var(--accent); font-weight: 600; }
+  .meal-title-wrap { flex: 1; }
+  .meal-title { font-size: 15px; font-weight: 600; }
+  .meal-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .meal-kcal {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--yellow);
+    background: rgba(227,179,65,.12);
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+  .meal-macros-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .badge.p { background: rgba(63,185,80,.18); color: var(--protein-color); }
+  .badge.c { background: rgba(0,212,255,.18); color: var(--cyan); }
+  .badge.f { background: rgba(248,81,73,.18); color: var(--red); }
 
-    /* DAY SELECTOR */
-    .day-section { margin-bottom: 16px; }
-    .day-scroll {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: none;
-    }
-    .day-scroll::-webkit-scrollbar { display: none; }
-    .day-btn {
-      min-width: 58px;
-      padding: 10px 6px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--bg2);
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 500;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
-      flex-shrink: 0;
-    }
-    .day-btn.active {
-      border-color: var(--accent);
-      background: #0a2a28;
-      color: var(--accent);
-      font-weight: 700;
-    }
-    .day-btn .day-type {
-      font-size: 9px;
-      margin-top: 2px;
-      opacity: 0.7;
-    }
+  .meal-foods {
+    border-top: 1px solid var(--border);
+    padding: 0 16px 14px;
+  }
+  .food-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .food-row:last-child { border-bottom: none; }
+  .food-name { font-size: 14px; color: var(--text); }
+  .food-right { text-align: right; }
+  .food-amount { font-size: 14px; font-weight: 600; color: var(--text); }
+  .food-macros-small { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .food-kcal-small { font-size: 12px; color: var(--muted); }
 
-    /* MEAL CARDS */
-    .meal-card {
-      background: var(--bg2);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-      overflow: hidden;
-    }
-    .meal-card.lunch {
-      background: linear-gradient(135deg, #0a2a1a, #0d1a0d);
-      border-color: #1a4a2a;
-    }
-    .meal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 14px 10px;
-      cursor: pointer;
-    }
-    .meal-title-wrap { display: flex; align-items: center; gap: 10px; }
-    .meal-emoji { font-size: 20px; }
-    .meal-name { font-size: 14px; font-weight: 700; color: #ddd; }
-    .meal-card.lunch .meal-name { color: #7ecb9a; }
-    .meal-time { font-size: 10px; color: var(--dim); margin-top: 2px; }
-    .meal-kcal {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--gold);
-      background: #1a1500;
-      padding: 5px 10px;
-      border-radius: 8px;
-    }
-    .meal-macros-row {
-      display: flex;
-      gap: 10px;
-      padding: 0 14px 10px;
-    }
-    .meal-macro-chip {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-    .chip-p { background: #0a2a28; color: var(--accent); }
-    .chip-c { background: #0a1e2a; color: var(--blue); }
-    .chip-f { background: #2a0a0a; color: var(--red); }
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
 
-    .meal-body { padding: 0 14px 14px; }
-    .ingredients-list { list-style: none; }
-    .ingredient-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border);
-      gap: 8px;
-    }
-    .ingredient-row:last-child { border-bottom: none; }
-    .ing-name { font-size: 12px; color: #ccc; flex: 1; }
-    .ing-right { text-align: right; flex-shrink: 0; }
-    .ing-amount { font-size: 12px; color: #fff; font-weight: 600; }
-    .ing-macros { font-size: 10px; color: var(--dim); margin-top: 2px; }
-
-    .lunch-badge {
-      display: inline-block;
-      margin-left: 6px;
-      font-size: 9px;
-      background: #1a4a2a;
-      color: var(--accent);
-      padding: 2px 6px;
-      border-radius: 4px;
-      vertical-align: middle;
-    }
-
-    /* NOTES */
-    .notes-card {
-      background: var(--bg2);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      padding: 16px;
-      margin-top: 4px;
-    }
-    .note-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: flex-start;
-    }
-    .note-row:last-child { margin-bottom: 0; }
-    .note-arrow { color: var(--accent); font-size: 12px; margin-top: 1px; flex-shrink: 0; }
-    .note-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
-    /* BOTTOM NAV */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: #0a0a16;
-      border-top: 1px solid var(--border);
-      display: flex;
-      z-index: 100;
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-    .nav-btn {
-      flex: 1;
-      padding: 12px 8px;
-      background: none;
-      border: none;
-      color: var(--dim);
-      font-size: 10px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      transition: color 0.2s;
-    }
-    .nav-btn.active { color: var(--accent); }
-    .nav-btn .nav-icon { font-size: 20px; }
-    body { padding-bottom: 80px; }
-
-    /* SHOP PAGE */
-    #shop-page { display: none; }
-    .shop-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .export-btn {
-      background: var(--accent);
-      color: #0a0a16;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .shop-category {
-      background: var(--bg2);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-      overflow: hidden;
-    }
-    .shop-cat-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-    }
-    .shop-cat-title { font-size: 13px; font-weight: 700; color: #ddd; }
-    .shop-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-    }
-    .shop-item:last-child { border-bottom: none; }
-    .shop-checkbox {
-      width: 20px; height: 20px;
-      border-radius: 6px;
-      border: 2px solid var(--border);
-      flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .shop-item.checked .shop-checkbox {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-    .shop-item.checked .shop-checkbox::after { content: "✓"; color: #0a0a16; font-size: 12px; font-weight: 800; }
-    .shop-item.checked .shop-item-name { text-decoration: line-through; color: var(--dim); }
-    .shop-item-info { flex: 1; }
-    .shop-item-name { font-size: 13px; color: #ddd; }
-    .shop-item-qty { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .shop-reset-btn {
-      width: 100%;
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px;
-      color: var(--muted);
-      font-size: 12px;
-      cursor: pointer;
-      margin-top: 4px;
-    }
-  
-    /* ── TRACKER ── */
-    #tracker-page { padding: 16px; }
-    .tracker-tabs { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:4px; }
-    .tracker-tab { flex-shrink:0; padding:8px 16px; border-radius:20px; border:1px solid var(--border); background:var(--bg2); color:var(--muted); font-size:13px; cursor:pointer; }
-    .tracker-tab.active { background:var(--accent); color:#000; font-weight:700; border-color:var(--accent); }
-    .tracker-panel { display:none; }
-    .tracker-panel.active { display:block; }
-    .form-group { margin-bottom:12px; }
-    .form-group label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
-    .form-group input, .form-group select, .form-group textarea {
-      width:100%; padding:10px 12px; background:var(--bg2); border:1px solid var(--border);
-      border-radius:8px; color:var(--text); font-size:14px; outline:none;
-    }
-    .form-group input:focus, .form-group select:focus { border-color:var(--accent); }
-    .log-btn { width:100%; padding:12px; background:var(--accent); color:#000; font-weight:700;
-      font-size:15px; border:none; border-radius:10px; cursor:pointer; margin-top:8px; }
-    .log-btn:active { opacity:0.8; }
-    .meal-entry { background:var(--bg2); border:1px solid var(--border); border-radius:10px;
-      padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
-    .meal-entry-info { font-size:13px; }
-    .meal-entry-info .name { font-weight:600; color:var(--text); }
-    .meal-entry-info .macros { color:var(--muted); font-size:12px; margin-top:2px; }
-    .meal-delete { background:none; border:none; color:var(--red); font-size:18px; cursor:pointer; padding:4px 8px; }
-    .stats-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:12px; }
-    .stats-card h4 { font-size:12px; color:var(--muted); margin-bottom:8px; letter-spacing:1px; text-transform:uppercase; }
-    .macro-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
-    .macro-label { font-size:13px; color:var(--muted); }
-    .macro-val { font-size:15px; font-weight:700; }
-    .macro-bar-bg { height:6px; background:var(--border); border-radius:3px; margin-top:4px; }
-    .macro-bar { height:6px; border-radius:3px; transition:width 0.3s; }
-    .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
-      background:#333; color:#fff; padding:10px 20px; border-radius:20px; font-size:13px;
-      z-index:999; opacity:0; transition:opacity 0.3s; pointer-events:none; }
-    .toast.show { opacity:1; }
-    .bar-chart { display:flex; align-items:flex-end; gap:6px; height:80px; margin-top:8px; }
-    .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
-    .bar { width:100%; background:var(--accent); border-radius:4px 4px 0 0; min-height:2px; opacity:0.7; }
-    .bar-label { font-size:9px; color:var(--muted); }
-
-  </style>
-
-  <script>
-    const SUPABASE_URL = "https://ezujjualnaymadpjjkom.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dWpqdWFsbmF5bWFkcGpqa29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjAyOTYsImV4cCI6MjEwMzM5NjI5Nn0.swZqGIJwrW0QgnbnftCsBcV3snYJbRS-IIh744499nc";
-    async function sbFetch(path, method='GET', body=null) {
-      const opts = {
-        method,
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': method === 'POST' ? 'return=representation' : ''
-        }
-      };
-      if (body) opts.body = JSON.stringify(body);
-      const r = await fetch(SUPABASE_URL + path, opts);
-      if (!r.ok) throw new Error(await r.text());
-      if (r.status === 204) return null;
-      return r.json();
-    }
-  </script>
-
+  /* ── Login ── */
+  .login-wrap {
+    max-width: 360px;
+    margin: 80px auto 0;
+    padding: 0 16px;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+  }
+  .login-card h2 { font-size: 18px; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .btn-primary:hover { opacity: .9; }
+  .error-msg { font-size: 13px; color: var(--red); margin-top: 10px; display: none; }
+  .error-msg.show { display: block; }
+</style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-tag">Lean Cut Program</div>
-  <h1>Mike's Meal Plan</h1>
-  <div class="header-sub">174cm · 77kg → 74kg · 1.400 kcal · 4-5x βάρη + ποδόσφαιρο</div>
-</div>
-
-<div class="main">
-
-  <!-- MACROS CARD -->
-  <div class="macros-card">
-    <div class="card-label">Ημερήσια Σύνολα</div>
-    <div class="macro-grid">
-      <div class="macro-item">
-        <div class="macro-val" style="color:#f0a500" id="tot-kcal">0</div>
-        <div class="macro-unit">kcal</div>
-        <div class="macro-name">Θερμίδες</div>
-      </div>
-      <div class="macro-item">
-        <div class="macro-val" style="color:#4ecdc4" id="tot-p">0</div>
-        <div class="macro-unit">g</div>
-        <div class="macro-name">Πρωτεΐνη</div>
-      </div>
-      <div class="macro-item">
-        <div class="macro-val" style="color:#45b7d1" id="tot-c">0</div>
-        <div class="macro-unit">g</div>
-        <div class="macro-name">Υδατ/κες</div>
-      </div>
-      <div class="macro-item">
-        <div class="macro-val" style="color:#ff6b6b" id="tot-f">0</div>
-        <div class="macro-unit">g</div>
-        <div class="macro-name">Λίπος</div>
-      </div>
-    </div>
-    <div class="macro-bar-wrap">
-      <div class="macro-bar-row"><span>Πρωτεΐνη</span><span id="bar-p-lbl" style="color:#4ecdc4">0 / 130g</span></div>
-      <div class="bar-bg"><div class="bar-fill" id="bar-p" style="background:#4ecdc4;width:0%"></div></div>
-    </div>
-    <div class="macro-bar-wrap">
-      <div class="macro-bar-row"><span>Υδατάνθρακες</span><span id="bar-c-lbl" style="color:#45b7d1">0 / 100g</span></div>
-      <div class="bar-bg"><div class="bar-fill" id="bar-c" style="background:#45b7d1;width:0%"></div></div>
-    </div>
-    <div class="macro-bar-wrap">
-      <div class="macro-bar-row"><span>Λίπος</span><span id="bar-f-lbl" style="color:#ff6b6b">0 / 53g</span></div>
-      <div class="bar-bg"><div class="bar-fill" id="bar-f" style="background:#ff6b6b;width:0%"></div></div>
-    </div>
-    <div class="target-note">Στόχος: <span>1.800 kcal</span> · <span>160g P</span> · <span>140g C</span> · <span>67g F</span></div>
+<header>
+  <h1>🥗 Meal Tracker</h1>
+  <div class="date-nav">
+    <button id="prev-day">‹</button>
+    <span id="date-label"></span>
+    <button id="next-day">›</button>
   </div>
+  <div id="user-badge"></div>
+</header>
 
-  <!-- DAY SELECTOR -->
-  <div class="day-section">
-    <div class="card-label" style="margin-bottom:8px">Ημέρα</div>
-    <div class="day-scroll" id="day-scroll"></div>
-  </div>
+<main id="app"></main>
 
-  <!-- MEALS CONTAINER -->
-  <div id="meals-container"></div>
-
-  <!-- NOTES -->
-  <div class="notes-card">
-    <div class="card-label">💡 Σημειώσεις</div>
-    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">🥔 Jacket πατάτα: βάλε 4-5 μαζί στο fryer, κρατάει <strong>3-4 μέρες</strong> στο ψυγείο. Ζέστανε 5' στο fryer ή 1' στο φούρνο μικροκυμάτων</span></div>
-    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">🍳 Το 4ο γεύμα (βράδυ) είναι <strong>προαιρετικό</strong> — φάτο μόνο αν πεινάς</span></div>
-    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">⚽ Ημέρα ποδοσφαίρου: φάε το γιαούρτι bowl νωρίτερα και πρόσθεσε 1 μπανάνα πριν τον αγώνα</span></div>
-    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">💧 Νερό: τουλάχιστον 2.5-3 λίτρα / ημέρα</span></div>
-    <div class="note-row"><span class="note-arrow">→</span><span class="note-text">💪 Πριν τη γυμναστική: φάε την ομελέτα 60-90' πριν για ενέργεια</span></div>
-  </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const DAYS = [
-  { name: "Δευτέρα", short: "ΔΕΥ", type: "🏋️" },
-  { name: "Τρίτη",   short: "ΤΡΙ", type: "🏋️" },
-  { name: "Τετάρτη", short: "ΤΕΤ", type: "⚽" },
-  { name: "Πέμπτη",  short: "ΠΕΜ", type: "🏋️" },
-  { name: "Παρασκευή",short:"ΠΑΡ", type: "🏋️" },
-  { name: "Σάββατο", short: "ΣΑΒ", type: "🚶" },
-  { name: "Κυριακή", short: "ΚΥΡ", type: "🚶" },
-];
+const SUPABASE_URL = 'https://ezujjualnaymadpjjkom.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dWpqdWFsbmF5bWFkcGpqa29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjAyOTYsImV4cCI6MjEwMzM5NjI5Nn0.swZqGIJwrW0QgnbnftCsBcV3snYJbRS-IIh744499nc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Each day has 4 meals: breakfast, snack, lunch, dinner
-// Each meal has ingredients with: name, amount (g or ml), protein, carbs, fat, kcal
-const PLAN = [
-  // ── ΔΕΥΤΕΡΑ ── Κοτόπουλο | ~1.390 kcal, ~131g P
-  {
-    breakfast: {
-      name: "Γιαούρτι bowl",
-      ingredients: [
-        { name: "Γιαούρτι 0%",           amount: "350g",         p: 31, c: 14, f: 0,  kcal: 180 },
-        { name: "Μέλι",                  amount: "8g",            p: 0,  c: 6,  f: 0,  kcal: 25  },
-        { name: "Φράουλες",              amount: "150g",          p: 1,  c: 12, f: 0,  kcal: 52  },
-        { name: "Μούρα",                 amount: "80g",           p: 1,  c: 10, f: 0,  kcal: 45  },
-      ]
-    },
-    snack: {
-      name: "Ομελέτα με πιπεριά & cottage",
-      ingredients: [
-        { name: "Αυγά",                  amount: "4 τεμ (200g)",  p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Cottage cheese",        amount: "80g",           p: 9,  c: 2,  f: 3,  kcal: 71  },
-        { name: "Πιπεριά",               amount: "100g",          p: 1,  c: 6,  f: 0,  kcal: 28  },
-        { name: "Ελαιόλαδο",             amount: "5ml",           p: 0,  c: 0,  f: 5,  kcal: 42  },
-      ]
-    },
-    lunch: {
-      name: "Κοτόπουλο ψητό & jacket πατάτα",
-      isLunch: true,
-      ingredients: [
-        { name: "Κοτόπουλο φιλέτο ψητό", amount: "250g",         p: 56, c: 0,  f: 5,  kcal: 275 },
-        { name: "Jacket πατάτα (fryer)", amount: "150g",          p: 3,  c: 27, f: 1,  kcal: 129 },
-        { name: "Αγγούρι/ντομάτα",       amount: "150g",          p: 1,  c: 5,  f: 0,  kcal: 24  },
-        { name: "Ελαιόλαδο",             amount: "8ml",           p: 0,  c: 0,  f: 7,  kcal: 67  },
-      ]
-    },
-    dinner: { name: "", ingredients: [] }
-  },
-  // ── ΤΡΙΤΗ ── Σολομός | ~1.380 kcal, ~128g P
-  {
-    breakfast: {
-      name: "Γιαούρτι bowl",
-      ingredients: [
-        { name: "Γιαούρτι 0%",           amount: "350g",         p: 31, c: 14, f: 0,  kcal: 180 },
-        { name: "Μέλι",                  amount: "8g",            p: 0,  c: 6,  f: 0,  kcal: 25  },
-        { name: "Φράουλες",              amount: "150g",          p: 1,  c: 12, f: 0,  kcal: 52  },
-        { name: "Βατόμουρα",             amount: "80g",           p: 1,  c: 8,  f: 0,  kcal: 36  },
-      ]
-    },
-    snack: {
-      name: "Ομελέτα με σπανάκι & cottage",
-      ingredients: [
-        { name: "Αυγά",                  amount: "4 τεμ (200g)",  p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Cottage cheese",        amount: "80g",           p: 9,  c: 2,  f: 3,  kcal: 71  },
-        { name: "Σπανάκι",               amount: "100g",          p: 2,  c: 3,  f: 0,  kcal: 20  },
-        { name: "Ελαιόλαδο",             amount: "5ml",           p: 0,  c: 0,  f: 5,  kcal: 42  },
-      ]
-    },
-    lunch: {
-      name: "Σολομός & jacket πατάτα",
-      isLunch: true,
-      ingredients: [
-        { name: "Σολομός φιλέτο ψητό",   amount: "200g",         p: 40, c: 0,  f: 13, kcal: 281 },
-        { name: "Jacket πατάτα (fryer)", amount: "150g",          p: 3,  c: 27, f: 1,  kcal: 129 },
-        { name: "Αγγούρι/λαχανικά",      amount: "150g",          p: 1,  c: 5,  f: 0,  kcal: 24  },
-        { name: "Ελαιόλαδο",             amount: "8ml",           p: 0,  c: 0,  f: 7,  kcal: 67  },
-      ]
-    },
-    dinner: { name: "", ingredients: [] }
-  },
-  // ── ΤΕΤΑΡΤΗ (ποδόσφαιρο) ── Γαρίδες | ~1.430 kcal, ~131g P
-  {
-    breakfast: {
-      name: "Γιαούρτι bowl (ημέρα αγώνα)",
-      ingredients: [
-        { name: "Γιαούρτι 0%",           amount: "350g",         p: 31, c: 14, f: 0,  kcal: 180 },
-        { name: "Μέλι",                  amount: "12g",           p: 0,  c: 10, f: 0,  kcal: 38  },
-        { name: "Φράουλες",              amount: "150g",          p: 1,  c: 12, f: 0,  kcal: 52  },
-        { name: "Μούρα",                 amount: "80g",           p: 1,  c: 10, f: 0,  kcal: 45  },
-      ]
-    },
-    snack: {
-      name: "Ομελέτα με πιπεριά & cottage",
-      ingredients: [
-        { name: "Αυγά",                  amount: "4 τεμ (200g)",  p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Cottage cheese",        amount: "80g",           p: 9,  c: 2,  f: 3,  kcal: 71  },
-        { name: "Πιπεριά χρωματιστή",    amount: "100g",          p: 1,  c: 6,  f: 0,  kcal: 28  },
-        { name: "Ελαιόλαδο",             amount: "5ml",           p: 0,  c: 0,  f: 5,  kcal: 42  },
-      ]
-    },
-    lunch: {
-      name: "Γαρίδες & jacket πατάτα",
-      isLunch: true,
-      ingredients: [
-        { name: "Γαρίδες ψητές",         amount: "280g",         p: 52, c: 1,  f: 3,  kcal: 238 },
-        { name: "Jacket πατάτα (fryer)", amount: "150g",          p: 3,  c: 27, f: 1,  kcal: 129 },
-        { name: "Σαλάτα/λαχανικά",       amount: "150g",          p: 2,  c: 6,  f: 0,  kcal: 32  },
-        { name: "Ελαιόλαδο",             amount: "8ml",           p: 0,  c: 0,  f: 7,  kcal: 67  },
-      ]
-    },
-    dinner: { name: "", ingredients: [] }
-  },
-  // ── ΠΕΜΠΤΗ ── Μοσχάρι | ~1.390 kcal, ~130g P
-  {
-    breakfast: {
-      name: "Γιαούρτι bowl",
-      ingredients: [
-        { name: "Γιαούρτι 0%",           amount: "350g",         p: 31, c: 14, f: 0,  kcal: 180 },
-        { name: "Μέλι",                  amount: "8g",            p: 0,  c: 6,  f: 0,  kcal: 25  },
-        { name: "Φράουλες",              amount: "120g",          p: 1,  c: 10, f: 0,  kcal: 42  },
-        { name: "Βατόμουρα",             amount: "80g",           p: 1,  c: 8,  f: 0,  kcal: 36  },
-      ]
-    },
-    snack: {
-      name: "Ομελέτα με ντομάτα & cottage",
-      ingredients: [
-        { name: "Αυγά",                  amount: "4 τεμ (200g)",  p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Cottage cheese",        amount: "80g",           p: 9,  c: 2,  f: 3,  kcal: 71  },
-        { name: "Ντομάτα",               amount: "120g",          p: 1,  c: 5,  f: 0,  kcal: 24  },
-        { name: "Ελαιόλαδο",             amount: "5ml",           p: 0,  c: 0,  f: 5,  kcal: 42  },
-      ]
-    },
-    lunch: {
-      name: "Μοσχάρι & jacket πατάτα",
-      isLunch: true,
-      ingredients: [
-        { name: "Μοσχαρίσιο φιλέτο",    amount: "220g",          p: 44, c: 0,  f: 10, kcal: 270 },
-        { name: "Jacket πατάτα (fryer)", amount: "150g",          p: 3,  c: 27, f: 1,  kcal: 129 },
-        { name: "Αγγούρι/σαλάτα",        amount: "150g",          p: 1,  c: 5,  f: 0,  kcal: 24  },
-        { name: "Ελαιόλαδο",             amount: "8ml",           p: 0,  c: 0,  f: 7,  kcal: 67  },
-      ]
-    },
-    dinner: { name: "", ingredients: [] }
-  },
-  // ── ΠΑΡΑΣΚΕΥΗ ── Κοτόπουλο | ~1.390 kcal, ~131g P
-  {
-    breakfast: {
-      name: "Γιαούρτι bowl",
-      ingredients: [
-        { name: "Γιαούρτι 0%",           amount: "350g",         p: 31, c: 14, f: 0,  kcal: 180 },
-        { name: "Μέλι",                  amount: "8g",            p: 0,  c: 6,  f: 0,  kcal: 25  },
-        { name: "Φράουλες",              amount: "150g",          p: 1,  c: 12, f: 0,  kcal: 52  },
-        { name: "Μούρα",                 amount: "60g",           p: 1,  c: 7,  f: 0,  kcal: 33  },
-      ]
-    },
-    snack: {
-      name: "Ομελέτα με σπανάκι & πιπεριά & cottage",
-      ingredients: [
-        { name: "Αυγά",                  amount: "4 τεμ (200g)",  p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Cottage cheese",        amount: "80g",           p: 9,  c: 2,  f: 3,  kcal: 71  },
-        { name: "Σπανάκι + πιπεριά",     amount: "100g",          p: 2,  c: 4,  f: 0,  kcal: 24  },
-        { name: "Ελαιόλαδο",             amount: "5ml",           p: 0,  c: 0,  f: 5,  kcal: 42  },
-      ]
-    },
-    lunch: {
-      name: "Κοτόπουλο ψητό & jacket πατάτα",
-      isLunch: true,
-      ingredients: [
-        { name: "Κοτόπουλο φιλέτο ψητό", amount: "250g",         p: 56, c: 0,  f: 5,  kcal: 275 },
-        { name: "Jacket πατάτα (fryer)", amount: "150g",          p: 3,  c: 27, f: 1,  kcal: 129 },
-        { name: "Ντομάτα/αγγούρι",        amount: "150g",         p: 1,  c: 5,  f: 0,  kcal: 24  },
-        { name: "Ελαιόλαδο",             amount: "8ml",           p: 0,  c: 0,  f: 7,  kcal: 67  },
-      ]
-    },
-    dinner: { name: "", ingredients: [] }
-  },
-  // ── ΣΑΒΒΑΤΟ ── Τόνος | ~1.370 kcal, ~133g P
-  {
-    breakfast: {
-      name: "Γιαούρτι bowl",
-      ingredients: [
-        { name: "Γιαούρτι 0%",           amount: "350g",         p: 31, c: 14, f: 0,  kcal: 180 },
-        { name: "Μέλι",                  amount: "8g",            p: 0,  c: 6,  f: 0,  kcal: 25  },
-        { name: "Φράουλες",              amount: "150g",          p: 1,  c: 12, f: 0,  kcal: 52  },
-        { name: "Βατόμουρα",             amount: "60g",           p: 1,  c: 6,  f: 0,  kcal: 27  },
-      ]
-    },
-    snack: {
-      name: "Ομελέτα με μανιτάρια & cottage",
-      ingredients: [
-        { name: "Αυγά",                  amount: "4 τεμ (200g)",  p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Cottage cheese",        amount: "80g",           p: 9,  c: 2,  f: 3,  kcal: 71  },
-        { name: "Μανιτάρια",             amount: "100g",          p: 3,  c: 3,  f: 0,  kcal: 22  },
-        { name: "Ελαιόλαδο",             amount: "5ml",           p: 0,  c: 0,  f: 5,  kcal: 42  },
-      ]
-    },
-    lunch: {
-      name: "Τόνος & jacket πατάτα",
-      isLunch: true,
-      ingredients: [
-        { name: "Τόνος σε νερό (στραγγ.)", amount: "250g",       p: 55, c: 0,  f: 3,  kcal: 243 },
-        { name: "Jacket πατάτα (fryer)", amount: "150g",          p: 3,  c: 27, f: 1,  kcal: 129 },
-        { name: "Αγγούρι/ντομάτα",        amount: "150g",         p: 1,  c: 5,  f: 0,  kcal: 24  },
-        { name: "Ελαιόλαδο",             amount: "8ml",           p: 0,  c: 0,  f: 7,  kcal: 67  },
-      ]
-    },
-    dinner: { name: "", ingredients: [] }
-  },
-  // ── ΚΥΡΙΑΚΗ ── Σολομός | ~1.390 kcal, ~129g P
-  {
-    breakfast: {
-      name: "Γιαούρτι bowl",
-      ingredients: [
-        { name: "Γιαούρτι 0%",           amount: "350g",         p: 31, c: 14, f: 0,  kcal: 180 },
-        { name: "Μέλι",                  amount: "8g",            p: 0,  c: 6,  f: 0,  kcal: 25  },
-        { name: "Φράουλες",              amount: "150g",          p: 1,  c: 12, f: 0,  kcal: 52  },
-        { name: "Μούρα",                 amount: "80g",           p: 1,  c: 10, f: 0,  kcal: 45  },
-      ]
-    },
-    snack: {
-      name: "Ομελέτα με πιπεριά & ντομάτα & cottage",
-      ingredients: [
-        { name: "Αυγά",                  amount: "4 τεμ (200g)",  p: 25, c: 1,  f: 18, kcal: 278 },
-        { name: "Cottage cheese",        amount: "80g",           p: 9,  c: 2,  f: 3,  kcal: 71  },
-        { name: "Πιπεριά + ντομάτα",     amount: "120g",          p: 1,  c: 6,  f: 0,  kcal: 28  },
-        { name: "Ελαιόλαδο",             amount: "5ml",           p: 0,  c: 0,  f: 5,  kcal: 42  },
-      ]
-    },
-    lunch: {
-      name: "Σολομός & jacket πατάτα",
-      isLunch: true,
-      ingredients: [
-        { name: "Σολομός φιλέτο ψητό",   amount: "200g",         p: 40, c: 0,  f: 13, kcal: 281 },
-        { name: "Jacket πατάτα (fryer)", amount: "150g",          p: 3,  c: 27, f: 1,  kcal: 129 },
-        { name: "Σαλάτα/λαχανικά",       amount: "150g",          p: 2,  c: 6,  f: 0,  kcal: 32  },
-        { name: "Ελαιόλαδο",             amount: "8ml",           p: 0,  c: 0,  f: 7,  kcal: 67  },
-      ]
-    },
-    dinner: { name: "", ingredients: [] }
-  },
-];
+// Goals
+const GOALS = { kcal: 1800, protein: 160, carbs: 140, fat: 67 };
 
-const MEAL_META = [
-  { key: "breakfast", emoji: "🌅", label: "Πρωινό",       time: "07:30 – 08:00" },
-  { key: "snack",     emoji: "🍎", label: "Σνακ",         time: "11:00 – 11:30" },
-  { key: "lunch",     emoji: "☀️", label: "Μεσημεριανό",  time: "13:30 – 14:00" },
-  { key: "dinner",    emoji: "🌙", label: "Βραδινό",      time: "19:30 – 20:00" },
-];
+// No login required — reads directly via anon key (RLS must allow select)
 
-const TARGETS = { kcal: 1400, p: 130, c: 100, f: 53 };
+const MEAL_LABELS = {
+  breakfast: 'Πρωινό',
+  lunch: 'Μεσημεριανό',
+  dinner: 'Βραδινό',
+  snack: 'Σνακ'
+};
+const MEAL_ICONS = {
+  breakfast: '🌅',
+  lunch: '☀️',
+  dinner: '🌙',
+  snack: '🍎'
+};
 
-let activeDay = 0;
+let currentDate = new Date();
+currentDate.setHours(0,0,0,0);
+let channel = null;
 
-function sumMeal(meal) {
-  return meal.ingredients.reduce((acc, ing) => ({
-    kcal: acc.kcal + ing.kcal,
-    p: acc.p + ing.p,
-    c: acc.c + ing.c,
-    f: acc.f + ing.f,
-  }), { kcal: 0, p: 0, c: 0, f: 0 });
+// ── Date helpers ──
+function toDateStr(d) {
+  return d.toISOString().slice(0,10);
+}
+function formatDateLabel(d) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = (d - today) / 86400000;
+  if (diff === 0) return 'Σήμερα';
+  if (diff === -1) return 'Χθες';
+  return d.toLocaleDateString('el-GR', { weekday:'short', day:'numeric', month:'short' });
+}
+function updateDateLabel() {
+  document.getElementById('date-label').textContent = formatDateLabel(currentDate);
+  const today = new Date(); today.setHours(0,0,0,0);
+  document.getElementById('next-day').disabled = currentDate >= today;
 }
 
-function sumDay(dayIdx) {
-  const day = PLAN[dayIdx];
-  const keys = ["breakfast", "snack", "lunch", "dinner"];
-  return keys.reduce((acc, k) => {
-    const s = sumMeal(day[k]);
-    return { kcal: acc.kcal + s.kcal, p: acc.p + s.p, c: acc.c + s.c, f: acc.f + s.f };
-  }, { kcal: 0, p: 0, c: 0, f: 0 });
-}
+document.getElementById('prev-day').onclick = () => {
+  currentDate.setDate(currentDate.getDate() - 1);
+  updateDateLabel();
+  loadDay();
+};
+document.getElementById('next-day').onclick = () => {
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (currentDate < today) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    updateDateLabel();
+    loadDay();
+  }
+};
 
-function updateTotals(dayIdx) {
-  const tot = sumDay(dayIdx);
-  document.getElementById("tot-kcal").textContent = tot.kcal;
-  document.getElementById("tot-p").textContent   = tot.p;
-  document.getElementById("tot-c").textContent   = tot.c;
-  document.getElementById("tot-f").textContent   = tot.f;
-
-  const pPct = Math.min(100, Math.round(tot.p / TARGETS.p * 100));
-  const cPct = Math.min(100, Math.round(tot.c / TARGETS.c * 100));
-  const fPct = Math.min(100, Math.round(tot.f / TARGETS.f * 100));
-
-  document.getElementById("bar-p").style.width = pPct + "%";
-  document.getElementById("bar-c").style.width = cPct + "%";
-  document.getElementById("bar-f").style.width = fPct + "%";
-
-  document.getElementById("bar-p-lbl").textContent = `${tot.p} / ${TARGETS.p}g`;
-  document.getElementById("bar-c-lbl").textContent = `${tot.c} / ${TARGETS.c}g`;
-  document.getElementById("bar-f-lbl").textContent = `${tot.f} / ${TARGETS.f}g`;
-}
-
-function renderDays() {
-  const scroll = document.getElementById("day-scroll");
-  scroll.innerHTML = "";
-  DAYS.forEach((d, i) => {
-    const btn = document.createElement("button");
-    btn.className = "day-btn" + (i === activeDay ? " active" : "");
-    btn.innerHTML = `${d.short}<div class="day-type">${d.type}</div>`;
-    btn.onclick = () => { activeDay = i; render(); };
-    scroll.appendChild(btn);
+// ── Parse notes into food items ──
+function parseNotes(notes) {
+  if (!notes) return [];
+  // Format: "410g Total 0%, 21g Calve φυστικοβούτυρο, 30g μέλι, 90g μπανάνα"
+  return notes.split(',').map(s => s.trim()).filter(Boolean).map(item => {
+    const m = item.match(/^(\d+(?:\.\d+)?)g\s+(.+)$/);
+    if (m) return { amount: m[1] + 'g', name: m[2] };
+    return { amount: '', name: item };
   });
 }
 
-function renderMeals() {
-  const container = document.getElementById("meals-container");
-  container.innerHTML = "";
-  const dayData = PLAN[activeDay];
+// ── Render ──
+function renderDay(meals) {
+  const app = document.getElementById('app');
 
-  MEAL_META.filter(m => {
-    const d = dayData[m.key];
-    return d && d.ingredients && d.ingredients.length > 0;
-  }).forEach(meta => {
-    const mealData = dayData[meta.key];
-    const totals = sumMeal(mealData);
-    const isLunch = !!mealData.isLunch;
+  // Totals
+  const totals = meals.reduce((a, m) => ({
+    kcal: a.kcal + (m.kcal||0),
+    protein: a.protein + parseFloat(m.protein_g||0),
+    carbs: a.carbs + parseFloat(m.carbs_g||0),
+    fat: a.fat + parseFloat(m.fat_g||0)
+  }), { kcal:0, protein:0, carbs:0, fat:0 });
 
-    const card = document.createElement("div");
-    card.className = "meal-card" + (isLunch ? " lunch" : "");
+  const pct = (v, goal) => Math.min(100, Math.round(v/goal*100));
 
-    const badge = isLunch ? `<span class="lunch-badge">ΙΔΙΟ ΜΕ ΚΟΠΕΛΑ</span>` : "";
+  // Group by meal_type preserving order
+  const order = ['breakfast','lunch','snack','dinner'];
+  const grouped = {};
+  for (const m of meals) {
+    const t = m.meal_type || 'snack';
+    if (!grouped[t]) grouped[t] = [];
+    grouped[t].push(m);
+  }
 
-    let ingredientRows = mealData.ingredients.map(ing => `
-      <li class="ingredient-row">
-        <span class="ing-name">${ing.name}</span>
-        <div class="ing-right">
-          <div class="ing-amount">${ing.amount}</div>
-          <div class="ing-macros">${ing.p}P · ${ing.c}C · ${ing.f}F · ${ing.kcal}kcal</div>
-        </div>
-      </li>
-    `).join("");
+  let mealHtml = '';
+  const types = order.filter(t => grouped[t]);
+  // also add any unknown types
+  for (const t of Object.keys(grouped)) {
+    if (!order.includes(t)) types.push(t);
+  }
 
-    card.innerHTML = `
-      <div class="meal-header">
-        <div class="meal-title-wrap">
-          <span class="meal-emoji">${meta.emoji}</span>
-          <div>
-            <div class="meal-name">${meta.label}${badge}</div>
-            <div class="meal-time">${meta.time} · ${mealData.name}</div>
+  for (const type of types) {
+    const items = grouped[type];
+    const mTotal = items.reduce((a,m) => ({
+      kcal: a.kcal+(m.kcal||0),
+      p: a.p+parseFloat(m.protein_g||0),
+      c: a.c+parseFloat(m.carbs_g||0),
+      f: a.f+parseFloat(m.fat_g||0)
+    }), {kcal:0,p:0,c:0,f:0});
+
+    // Build foods from notes of all items in this meal type
+    let foodsHtml = '';
+    for (const m of items) {
+      const foods = parseNotes(m.notes);
+      if (foods.length > 0) {
+        for (const food of foods) {
+          foodsHtml += `
+            <div class="food-row">
+              <div class="food-name">${esc(food.name)}</div>
+              <div class="food-right">
+                <div class="food-amount">${esc(food.amount)}</div>
+              </div>
+            </div>`;
+        }
+      } else {
+        // fallback: show description as single item
+        foodsHtml += `
+          <div class="food-row">
+            <div class="food-name">${esc(m.description || type)}</div>
+            <div class="food-right">
+              <div class="food-kcal-small">${m.kcal} kcal</div>
+            </div>
+          </div>`;
+      }
+    }
+
+    // Time from logged_at of first item
+    const firstLogged = items[0].logged_at;
+    const timeStr = firstLogged
+      ? new Date(firstLogged).toLocaleTimeString('el-GR', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Athens'})
+      : '';
+
+    const label = MEAL_LABELS[type] || type;
+    const icon = MEAL_ICONS[type] || '🍽️';
+
+    mealHtml += `
+      <div class="meal-card">
+        <div class="meal-card-header" onclick="toggleCard(this)">
+          <div class="meal-icon ${type}">${icon}</div>
+          <div class="meal-title-wrap">
+            <div class="meal-title">${label}</div>
+            <div class="meal-macros-badges">
+              <span class="badge p">P: ${Math.round(mTotal.p)}g</span>
+              <span class="badge c">C: ${Math.round(mTotal.c)}g</span>
+              <span class="badge f">F: ${Math.round(mTotal.f)}g</span>
+            </div>
           </div>
+          <div class="meal-kcal">${mTotal.kcal} kcal</div>
         </div>
-        <div class="meal-kcal">${totals.kcal} kcal</div>
-      </div>
-      <div class="meal-macros-row">
-        <span class="meal-macro-chip chip-p">P: ${totals.p}g</span>
-        <span class="meal-macro-chip chip-c">C: ${totals.c}g</span>
-        <span class="meal-macro-chip chip-f">F: ${totals.f}g</span>
-      </div>
-      <div class="meal-body">
-        <ul class="ingredients-list">${ingredientRows}</ul>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function render() {
-  renderDays();
-  renderMeals();
-  updateTotals(activeDay);
-}
-
-render();
-
-
-// ── SHOPPING LIST ──
-const SHOP_CATEGORIES = [
-  {
-    emoji: "🥚",
-    name: "Αυγά & Γαλακτοκομικά",
-    items: [
-      { name: "Αυγά",               qty: "28-30 τεμ. (4 σκατούλες)" },
-      { name: "Γιαούρτι 0%",        qty: "~2.5 kg (5 κουτιά 500g)" },
-      { name: "Γιαούρτι 2%",        qty: "500g (1 κουτί)" },
-      { name: "Γάλα 1.5%",          qty: "1 λίτρο" },
-      { name: "Τυρί light",          qty: "200g" },
-      { name: "Κεφαλοτύρι τριμμένο", qty: "150g" },
-    ]
-  },
-  {
-    emoji: "🍗",
-    name: "Κρέας & Ψάρι",
-    items: [
-      { name: "Κοτόπουλο στήθος",   qty: "~1.4 kg (για 3 μέρες x 250g + μεσ.)" },
-      { name: "Σολομός φιλέτο",     qty: "~700g (250g + 200g + μεσ.)" },
-      { name: "Γαρίδες φρέσκες/κατεψ.", qty: "~700g (200g + 300g + μεσ.)" },
-      { name: "Μοσχαρίσιος κιμάς",  qty: "~700g (μπιφτέκια Σαββ.)" },
-      { name: "Μοσχαρίσιο κρέας",   qty: "~450g (220g Πέμπτη + 200g Κυρ.)" },
-    ]
-  },
-  {
-    emoji: "🥣",
-    name: "Δημητριακά & Ψωμί",
-    items: [
-      { name: "Βρόμη ολικής",        qty: "~320g (80g x 4 μέρες)" },
-      { name: "Ψωμί ολικής",         qty: "1 φραντζόλα (~600g)" },
-      { name: "Ρύζι καστανό",        qty: "~400g" },
-      { name: "Ρύζι λευκό",          qty: "~200g" },
-      { name: "Κινόα",               qty: "~300g" },
-      { name: "Μακαρόνια ολικής",    qty: "~400g (100g x 4 μέρες)" },
-      { name: "Κράκερς ολικής",      qty: "~100g" },
-      { name: "Ρυζογκοφρέτες",       qty: "~80g (1 πακέτο)" },
-      { name: "Granola ολικής",       qty: "~100g" },
-    ]
-  },
-  {
-    emoji: "🥦",
-    name: "Λαχανικά & Φρούτα",
-    items: [
-      { name: "Μπανάνες",            qty: "5-6 τεμ." },
-      { name: "Μήλα/Αχλάδια",        qty: "4-5 τεμ." },
-      { name: "Γλυκοπατάτα",         qty: "~400g (2 μεγάλες)" },
-      { name: "Πατάτες",             qty: "~700g" },
-      { name: "Ντομάτες",            qty: "500g" },
-      { name: "Αγγούρι",             qty: "2 τεμ." },
-      { name: "Λαχανικά εποχής μικτά", qty: "~1.5 kg (σαλάτες + ψητά)" },
-      { name: "Φασολάκια",           qty: "~600g" },
-      { name: "Φρούτο της επιλογής σου", qty: "3-4 τεμ. (σνακ)" },
-    ]
-  },
-  {
-    emoji: "🫘",
-    name: "Όσπρια & Κονσέρβες",
-    items: [
-      { name: "Φασόλια (βρασμένα/κονσέρβα)", qty: "~600g (2 κονσέρβες)" },
-    ]
-  },
-  {
-    emoji: "🫒",
-    name: "Λάδια, Σάλτσες & Άλλα",
-    items: [
-      { name: "Ελαιόλαδο",           qty: "~200ml (εβδομάδα)" },
-      { name: "Μέλι",                qty: "~150g (1 βαζάκι)" },
-      { name: "Pesto βασιλικού",     qty: "1 βαζάκι (~80g)" },
-      { name: "Αμύγδαλα",            qty: "~100g" },
-      { name: "Καρύδια",             qty: "~50g" },
-    ]
-  },
-];
-
-let checkedItems = JSON.parse(localStorage.getItem('shopChecked') || '{}');
-
-function renderShop() {
-  const container = document.getElementById('shop-categories');
-  container.innerHTML = '';
-  SHOP_CATEGORIES.forEach((cat, ci) => {
-    const div = document.createElement('div');
-    div.className = 'shop-category';
-    const header = `<div class="shop-cat-header"><span style="font-size:18px">${cat.emoji}</span><span class="shop-cat-title">${cat.name}</span></div>`;
-    const items = cat.items.map((item, ii) => {
-      const key = ci + '-' + ii;
-      const checked = checkedItems[key] ? ' checked' : '';
-      return `<div class="shop-item${checked}" onclick="toggleItem('${key}', this)">
-        <div class="shop-checkbox"></div>
-        <div class="shop-item-info">
-          <div class="shop-item-name">${item.name}</div>
-          <div class="shop-item-qty">${item.qty}</div>
-        </div>
+        <div class="meal-foods">${foodsHtml}</div>
       </div>`;
-    }).join('');
-    div.innerHTML = header + items;
-    container.appendChild(div);
-  });
-}
-
-function toggleItem(key, el) {
-  el.classList.toggle('checked');
-  if (el.classList.contains('checked')) {
-    checkedItems[key] = true;
-  } else {
-    delete checkedItems[key];
   }
-  try { localStorage.setItem('shopChecked', JSON.stringify(checkedItems)); } catch(e) {}
-}
 
-function resetChecks() {
-  checkedItems = {};
-  try { localStorage.setItem('shopChecked', '{}'); } catch(e) {}
-  renderShop();
-}
-
-function exportToNotes() {
-  let text = "🛒 Shopping List - Mike's Meal Plan\n";
-  text += "================================\n\n";
-  SHOP_CATEGORIES.forEach(cat => {
-    text += cat.emoji + " " + cat.name + "\n";
-    cat.items.forEach(item => {
-      text += "☐ " + item.name + " — " + item.qty + "\n";
-    });
-    text += "\n";
-  });
-  // Try Web Share API first (mobile)
-  if (navigator.share) {
-    navigator.share({ title: "Shopping List", text: text }).catch(() => fallbackCopy(text));
-  } else {
-    fallbackCopy(text);
+  if (!types.length) {
+    mealHtml = `<div class="empty-state">Δεν έχεις καταχωρήσει γεύματα για αυτή τη μέρα.</div>`;
   }
-}
 
-function fallbackCopy(text) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.opacity = '0';
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-  alert('✅ Αντιγράφηκε! Κόλλα σε Notes, Telegram ή όπου θέλεις.');
-}
-
-// ── PAGE NAVIGATION ──
-function showPage(page) {
-  const planPage = document.querySelector('.main:not(#shop-page):not(#tracker-page)');
-  const shopPage = document.getElementById('shop-page');
-  const trackerPage = document.getElementById('tracker-page');
-  const header = document.querySelector('.header');
-  ['plan','tracker','shop'].forEach(p => {
-    const btn = document.getElementById('nav-' + p);
-    if (btn) btn.classList.toggle('active', p === page);
-  });
-  planPage.style.display = page === 'plan' ? '' : 'none';
-  header.style.display = page === 'plan' ? '' : 'none';
-  shopPage.style.display = page === 'shop' ? 'block' : 'none';
-  trackerPage.style.display = page === 'tracker' ? 'block' : 'none';
-  if (page === 'shop') renderShop();
-  if (page === 'tracker') loadTodayMeals();
-}
-
-
-// ── TRACKER JS ──
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-function switchTrackerTab(tab) {
-  document.querySelectorAll('.tracker-tab').forEach((b, i) => {
-    const tabs = ['log-meal','log-workout','log-day','stats'];
-    b.classList.toggle('active', tabs[i] === tab);
-  });
-  document.querySelectorAll('.tracker-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-' + tab).classList.add('active');
-  if (tab === 'stats') loadStats();
-  if (tab === 'log-meal') loadTodayMeals();
-  if (tab === 'log-workout') loadTodayWorkouts();
-}
-
-function todayStr() { return new Date().toISOString().slice(0,10); }
-
-async function logMeal() {
-  const name = document.getElementById('t-meal-name').value.trim();
-  if (!name) { showToast('⚠️ Βάλε όνομα γεύματος'); return; }
-  const body = {
-    meal_type: document.getElementById('t-meal-type').value,
-    food_name: name,
-    kcal: +document.getElementById('t-kcal').value || 0,
-    protein_g: +document.getElementById('t-protein').value || 0,
-    carbs_g: +document.getElementById('t-carbs').value || 0,
-    fat_g: +document.getElementById('t-fat').value || 0,
-    logged_at: new Date().toISOString()
-  };
-  try {
-    await sbFetch('/rest/v1/meals', 'POST', body);
-    showToast('✅ Γεύμα καταχωρήθηκε!');
-    document.getElementById('t-meal-name').value = '';
-    ['t-kcal','t-protein','t-carbs','t-fat'].forEach(id => document.getElementById(id).value = '');
-    loadTodayMeals();
-  } catch(e) { showToast('❌ Σφάλμα: ' + e.message); }
-}
-
-async function deleteMeal(id) {
-  try {
-    await sbFetch('/rest/v1/meals?id=eq.' + id, 'DELETE');
-    loadTodayMeals();
-  } catch(e) { showToast('❌ ' + e.message); }
-}
-
-async function loadTodayMeals() {
-  const container = document.getElementById('today-meals');
-  try {
-    const data = await sbFetch('/rest/v1/meals?logged_at=gte.' + todayStr() + 'T00:00:00&order=logged_at.asc');
-    if (!data || data.length === 0) {
-      container.innerHTML = '<div style="color:var(--muted);font-size:13px;">Δεν έχεις καταχωρήσει γεύματα σήμερα</div>';
-      return;
-    }
-    container.innerHTML = data.map(m => `
-      <div class="meal-entry">
-        <div class="meal-entry-info">
-          <div class="name">${m.food_name}</div>
-          <div class="macros">${m.kcal} kcal · P:${m.protein_g}g C:${m.carbs_g}g F:${m.fat_g}g</div>
+  app.innerHTML = `
+    <div class="daily-summary">
+      <div class="summary-label">Ημερήσια Σύνολα</div>
+      <div class="macros-row">
+        <div class="macro-cell">
+          <div class="macro-val kcal">${Math.round(totals.kcal)}</div>
+          <div class="macro-unit">kcal</div>
+          <div class="macro-name">Θερμίδες</div>
         </div>
-        <button class="meal-delete" onclick="deleteMeal(${m.id})">🗑</button>
-      </div>`).join('');
-  } catch(e) { container.innerHTML = '<div style="color:var(--red);">Offline - δεν φορτώθηκαν δεδομένα</div>'; }
-}
-
-async function logWorkout() {
-  const body = {
-    workout_type: document.getElementById('t-workout-type').value,
-    duration_min: +document.getElementById('t-duration').value || null,
-    notes: document.getElementById('t-workout-notes').value.trim() || null,
-    logged_at: new Date().toISOString()
-  };
-  try {
-    await sbFetch('/rest/v1/workouts', 'POST', body);
-    showToast('✅ Προπόνηση καταχωρήθηκε!');
-    document.getElementById('t-duration').value = '';
-    document.getElementById('t-workout-notes').value = '';
-    loadTodayWorkouts();
-  } catch(e) { showToast('❌ ' + e.message); }
-}
-
-async function loadTodayWorkouts() {
-  const container = document.getElementById('today-workouts');
-  try {
-    const data = await sbFetch('/rest/v1/workouts?logged_at=gte.' + todayStr() + 'T00:00:00&order=logged_at.asc');
-    if (!data || data.length === 0) {
-      container.innerHTML = '<div style="color:var(--muted);font-size:13px;">Δεν έχεις καταχωρήσει προπόνηση σήμερα</div>';
-      return;
-    }
-    container.innerHTML = data.map(w => `
-      <div class="meal-entry">
-        <div class="meal-entry-info">
-          <div class="name">${w.workout_type} ${w.duration_min ? '· ' + w.duration_min + 'λ' : ''}</div>
-          <div class="macros">${w.notes || ''}</div>
+        <div class="macro-cell">
+          <div class="macro-val protein">${Math.round(totals.protein)}</div>
+          <div class="macro-unit">g</div>
+          <div class="macro-name">Πρωτεΐνη</div>
         </div>
-      </div>`).join('');
-  } catch(e) {}
-}
-
-async function logDay() {
-  const body = {
-    weight_kg: +document.getElementById('t-weight').value || null,
-    sleep_hours: +document.getElementById('t-sleep').value || null,
-    energy_level: +document.getElementById('t-energy').value || null,
-    notes: document.getElementById('t-day-notes').value.trim() || null,
-    day_date: todayStr()
-  };
-  try {
-    await sbFetch('/rest/v1/daily_stats', 'POST', body);
-    showToast('✅ Ημέρα καταχωρήθηκε!');
-  } catch(e) { showToast('❌ ' + e.message); }
-}
-
-async function loadStats() {
-  const container = document.getElementById('stats-content');
-  container.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">Φόρτωση...</div>';
-  try {
-    const [meals, workouts, stats] = await Promise.all([
-      sbFetch('/rest/v1/meals?logged_at=gte.' + todayStr() + 'T00:00:00'),
-      sbFetch('/rest/v1/workouts?logged_at=gte.' + todayStr() + 'T00:00:00'),
-      sbFetch('/rest/v1/daily_stats?day_date=eq.' + todayStr())
-    ]);
-    const totals = (meals||[]).reduce((a, m) => ({
-      kcal: a.kcal + m.kcal,
-      p: a.p + m.protein_g,
-      c: a.c + m.carbs_g,
-      f: a.f + m.fat_g
-    }), {kcal:0, p:0, c:0, f:0});
-    const T = { kcal:1400, p:130, c:100, f:53 };
-    const pct = (v, t) => Math.min(100, Math.round(v/t*100));
-    const bar = (v, t, color) => `<div class="macro-bar-bg"><div class="macro-bar" style="width:${pct(v,t)}%;background:${color}"></div></div>`;
-    const dayStats = stats && stats[0] || {};
-    container.innerHTML = `
-      <div class="stats-card">
-        <h4>Σήμερα — Θρεπτικά</h4>
-        <div class="macro-row"><span class="macro-label">Θερμίδες</span><span class="macro-val" style="color:var(--gold)">${totals.kcal} / ${T.kcal}</span></div>
-        ${bar(totals.kcal, T.kcal, '#f0a500')}
-        <div class="macro-row" style="margin-top:8px"><span class="macro-label">Πρωτεΐνη</span><span class="macro-val" style="color:var(--blue)">${totals.p}g / ${T.p}g</span></div>
-        ${bar(totals.p, T.p, '#45b7d1')}
-        <div class="macro-row" style="margin-top:8px"><span class="macro-label">Υδατάνθρακες</span><span class="macro-val" style="color:var(--green)">${totals.c}g / ${T.c}g</span></div>
-        ${bar(totals.c, T.c, '#5cb85c')}
-        <div class="macro-row" style="margin-top:8px"><span class="macro-label">Λίπος</span><span class="macro-val" style="color:var(--red)">${totals.f}g / ${T.f}g</span></div>
-        ${bar(totals.f, T.f, '#ff6b6b')}
+        <div class="macro-cell">
+          <div class="macro-val carbs">${Math.round(totals.carbs)}</div>
+          <div class="macro-unit">g</div>
+          <div class="macro-name">Υδατ/κες</div>
+        </div>
+        <div class="macro-cell">
+          <div class="macro-val fat">${Math.round(totals.fat)}</div>
+          <div class="macro-unit">g</div>
+          <div class="macro-name">Λίπος</div>
+        </div>
       </div>
-      <div class="stats-card">
-        <h4>Σήμερα — Φυσική κατάσταση</h4>
-        <div style="font-size:13px;color:var(--muted)">${(workouts||[]).length > 0 ? (workouts||[]).map(w => `💪 ${w.workout_type}${w.duration_min ? ' '+w.duration_min+'λ' : ''}`).join(', ') : 'Δεν έχεις καταχωρήσει προπόνηση'}</div>
-        ${dayStats.weight_kg ? `<div style="font-size:13px;margin-top:8px;">⚖️ Βάρος: <b>${dayStats.weight_kg} kg</b></div>` : ''}
-        ${dayStats.sleep_hours ? `<div style="font-size:13px;margin-top:4px;">😴 Ύπνος: <b>${dayStats.sleep_hours}h</b></div>` : ''}
-        ${dayStats.energy_level ? `<div style="font-size:13px;margin-top:4px;">⚡ Ενέργεια: <b>${dayStats.energy_level}/10</b></div>` : ''}
-      </div>`;
-  } catch(e) {
-    container.innerHTML = '<div style="color:var(--red);text-align:center;padding:20px;">Offline — δεν φορτώθηκαν stats</div>';
-  }
+      <div class="progress-section">
+        <div class="progress-row">
+          <div class="progress-name">Πρωτεΐνη</div>
+          <div class="progress-bar-wrap"><div class="progress-bar protein" style="width:${pct(totals.protein,GOALS.protein)}%"></div></div>
+          <div class="progress-label">${Math.round(totals.protein)} / ${GOALS.protein}g</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-name">Υδατάνθρακες</div>
+          <div class="progress-bar-wrap"><div class="progress-bar carbs" style="width:${pct(totals.carbs,GOALS.carbs)}%"></div></div>
+          <div class="progress-label">${Math.round(totals.carbs)} / ${GOALS.carbs}g</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-name">Λίπος</div>
+          <div class="progress-bar-wrap"><div class="progress-bar fat" style="width:${pct(totals.fat,GOALS.fat)}%"></div></div>
+          <div class="progress-label">${Math.round(totals.fat)} / ${GOALS.fat}g</div>
+        </div>
+      </div>
+      <div class="goals-line">
+        Στόχος: <strong>${GOALS.kcal} kcal</strong> · <strong>${GOALS.protein}g P</strong> · <strong>${GOALS.carbs}g C</strong> · <strong>${GOALS.fat}g F</strong>
+      </div>
+    </div>
+    ${mealHtml}`;
 }
 
-
-// PWA service worker registration
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+function toggleCard(header) {
+  const foods = header.nextElementSibling;
+  foods.style.display = foods.style.display === 'none' ? '' : 'none';
 }
+
+function esc(s) {
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Load ──
+async function loadDay() {
+  const dateStr = toDateStr(currentDate);
+  const { data, error } = await sb
+    .from('meals')
+    .select('*')
+    .eq('meal_date', dateStr)
+    .order('logged_at');
+
+  renderDay(data || []);
+}
+
+// ── Realtime ──
+function subscribe() {
+  if (channel) return;
+  channel = sb.channel('meals-live')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'meals' }, () => {
+      loadDay();
+    })
+    .subscribe();
+}
+
+async function init() {
+  updateDateLabel();
+  await loadDay();
+  subscribe();
+}
+
+init();
 </script>
-
-
-<!-- TRACKER PAGE -->
-<div id="tracker-page" class="main" style="display:none;padding-top:16px">
-  <div style="font-size:18px;font-weight:800;margin-bottom:12px;">📊 Fitness Tracker</div>
-  <div class="tracker-tabs">
-    <button class="tracker-tab active" onclick="switchTrackerTab('log-meal')">🍽 Γεύμα</button>
-    <button class="tracker-tab" onclick="switchTrackerTab('log-workout')">💪 Προπόνηση</button>
-    <button class="tracker-tab" onclick="switchTrackerTab('log-day')">📅 Ημέρα</button>
-    <button class="tracker-tab" onclick="switchTrackerTab('stats')">📈 Stats</button>
-  </div>
-
-  <!-- Log Meal -->
-  <div class="tracker-panel active" id="panel-log-meal">
-    <div class="form-group"><label>Γεύμα</label>
-      <select id="t-meal-type">
-        <option value="breakfast">🌅 Πρωινό</option>
-        <option value="snack">🥛 Σνακ/Ομελέτα</option>
-        <option value="lunch">🍗 Κυρίως</option>
-      </select>
-    </div>
-    <div class="form-group"><label>Τρόφιμο / Περιγραφή</label>
-      <input id="t-meal-name" placeholder="π.χ. Κοτόπουλο με πατάτα" />
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div class="form-group"><label>Θερμίδες</label><input id="t-kcal" type="number" placeholder="0" /></div>
-      <div class="form-group"><label>Πρωτεΐνη (g)</label><input id="t-protein" type="number" placeholder="0" /></div>
-      <div class="form-group"><label>Υδατάνθρακες (g)</label><input id="t-carbs" type="number" placeholder="0" /></div>
-      <div class="form-group"><label>Λίπος (g)</label><input id="t-fat" type="number" placeholder="0" /></div>
-    </div>
-    <button class="log-btn" onclick="logMeal()">✅ Καταχώρηση γεύματος</button>
-    <div style="margin-top:16px;font-size:12px;color:var(--muted);margin-bottom:8px;">Σήμερα</div>
-    <div id="today-meals"></div>
-  </div>
-
-  <!-- Log Workout -->
-  <div class="tracker-panel" id="panel-log-workout">
-    <div class="form-group"><label>Τύπος προπόνησης</label>
-      <select id="t-workout-type">
-        <option value="weights">🏋️ Βάρη</option>
-        <option value="football">⚽ Ποδόσφαιρο</option>
-        <option value="cardio">🏃 Cardio</option>
-        <option value="rest">😴 Rest</option>
-      </select>
-    </div>
-    <div class="form-group"><label>Διάρκεια (λεπτά)</label>
-      <input id="t-duration" type="number" placeholder="60" />
-    </div>
-    <div class="form-group"><label>Σημειώσεις</label>
-      <textarea id="t-workout-notes" rows="2" placeholder="π.χ. Chest day, 5×5 bench..."></textarea>
-    </div>
-    <button class="log-btn" onclick="logWorkout()">✅ Καταχώρηση προπόνησης</button>
-    <div style="margin-top:16px;" id="today-workouts"></div>
-  </div>
-
-  <!-- Log Day -->
-  <div class="tracker-panel" id="panel-log-day">
-    <div class="form-group"><label>Βάρος (kg)</label>
-      <input id="t-weight" type="number" step="0.1" placeholder="78.0" />
-    </div>
-    <div class="form-group"><label>Ύπνος (ώρες)</label>
-      <input id="t-sleep" type="number" step="0.5" placeholder="7.5" />
-    </div>
-    <div class="form-group"><label>Ενέργεια (1-10)</label>
-      <input id="t-energy" type="number" min="1" max="10" placeholder="7" />
-    </div>
-    <div class="form-group"><label>Σημειώσεις</label>
-      <textarea id="t-day-notes" rows="2" placeholder="π.χ. Ένιωθα κουρασμένος..."></textarea>
-    </div>
-    <button class="log-btn" onclick="logDay()">✅ Καταχώρηση ημέρας</button>
-  </div>
-
-  <!-- Stats -->
-  <div class="tracker-panel" id="panel-stats">
-    <div id="stats-content"><div style="color:var(--muted);text-align:center;padding:20px;">Φόρτωση...</div></div>
-  </div>
-</div>
-
-<div id="toast" class="toast"></div>
-
-
-<!-- SHOP PAGE -->
-<div id="shop-page" class="main" style="padding-top:16px">
-  <div class="shop-header">
-    <div>
-      <div class="card-label">Εβδομαδιαία</div>
-      <div style="font-size:18px;font-weight:800;color:#fff">Shopping List 🛒</div>
-    </div>
-    <button class="export-btn" onclick="exportToNotes()">📤 Export</button>
-  </div>
-  <div id="shop-categories"></div>
-  <button class="shop-reset-btn" onclick="resetChecks()">↺ Επαναφορά λίστας</button>
-</div>
-
-<!-- BOTTOM NAV -->
-<div class="bottom-nav">
-  <button class="nav-btn active" id="nav-plan" onclick="showPage('plan')">
-    <span class="nav-icon">🍽️</span>
-    <span>Πρόγραμμα</span>
-  </button>
-  <button class="nav-btn" id="nav-tracker" onclick="showPage('tracker')">
-    <span class="nav-icon">📊</span>
-    <span>Tracker</span>
-  </button>
-  <button class="nav-btn" id="nav-shop" onclick="showPage('shop')">
-    <span class="nav-icon">🛒</span>
-    <span>Shopping</span>
-  </button>
-</div>
-
 </body>
 </html>
