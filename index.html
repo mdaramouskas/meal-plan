@@ -4,43 +4,435 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mike's Fitness</title>
+<link rel="manifest" href="manifest.json">
 <style>
-  :root { --bg:#0d1117;--surface:#161b22;--border:#21262d;--text:#e6edf3;--muted:#8b949e; }
-  * { box-sizing:border-box;margin:0;padding:0; }
-  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px; }
-  h1 { font-size:22px;margin-bottom:8px; }
-  p { color:var(--muted);font-size:14px;margin-bottom:32px; }
-  .cards { display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:420px; }
-  a {
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:28px 20px;text-decoration:none;color:var(--text);
-    transition:transform .15s,border-color .15s;
+  :root {
+    --bg:#0d1117; --surface:#161b22; --surface2:#1c2330; --border:#21262d;
+    --text:#e6edf3; --muted:#8b949e;
+    --accent:#58a6ff; --green:#3fb950; --orange:#f78166;
+    --yellow:#e3b341; --red:#f85149; --purple:#bc8cff; --cyan:#00d4ff;
   }
-  a:hover { transform:translateY(-2px); }
-  .icon { font-size:40px;margin-bottom:10px; }
-  .label { font-size:16px;font-weight:700; }
-  .sub { font-size:12px;color:var(--muted);margin-top:4px; }
-  .meals { border-color:#3fb95044; }
-  .meals:hover { border-color:#3fb950; }
-  .workout { border-color:#58a6ff44; }
-  .workout:hover { border-color:#58a6ff; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
+
+  /* ── Top bar ── */
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+  .topbar-title{font-size:16px;font-weight:700}
+  .topbar-right{font-size:13px;color:var(--muted)}
+
+  /* ── Bottom nav ── */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:20;height:60px}
+  .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:color .15s}
+  .nav-btn .nav-icon{font-size:20px}
+  .nav-btn.active{color:var(--accent)}
+
+  /* ── Pages ── */
+  .page{display:none;padding:16px 16px 20px}
+  .page.active{display:block}
+  main{max-width:680px;margin:0 auto}
+
+  /* ════════════════════════════
+     ΔΙΑΤΡΟΦΗ
+  ════════════════════════════ */
+  .date-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
+  .date-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:16px}
+  .date-nav button:hover{background:var(--border)}
+  #date-label{font-size:15px;font-weight:600;min-width:100px;text-align:center}
+
+  .daily-summary{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .summary-label{font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+  .macros-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px}
+  .macro-cell{text-align:center}
+  .macro-val{font-size:24px;font-weight:700;line-height:1}
+  .macro-val.kcal{color:var(--yellow)}
+  .macro-val.protein{color:var(--green)}
+  .macro-val.carbs{color:var(--cyan)}
+  .macro-val.fat{color:var(--orange)}
+  .macro-unit{font-size:11px;color:var(--muted);margin-top:2px}
+  .macro-name{font-size:11px;color:var(--muted);margin-top:3px}
+  .progress-section{display:flex;flex-direction:column;gap:8px}
+  .progress-row{display:flex;align-items:center;gap:8px}
+  .progress-name{font-size:12px;color:var(--text);width:110px;flex-shrink:0}
+  .progress-bar-bg{flex:1;height:7px;background:var(--surface2);border-radius:99px;overflow:hidden}
+  .progress-bar-fg{height:100%;border-radius:99px;transition:width .4s}
+  .progress-bar-fg.protein{background:var(--green)}
+  .progress-bar-fg.carbs{background:var(--cyan)}
+  .progress-bar-fg.fat{background:var(--orange)}
+  .progress-val{font-size:11px;color:var(--muted);width:72px;text-align:right;flex-shrink:0}
+  .goals-line{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .goals-line strong{color:var(--text)}
+
+  .meal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .meal-card-header{display:flex;align-items:center;padding:12px 14px;gap:10px}
+  .meal-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  .meal-icon.breakfast{background:linear-gradient(135deg,#ff9a56,#ffb347)}
+  .meal-icon.lunch{background:linear-gradient(135deg,#56cfb2,#2ecc71)}
+  .meal-icon.dinner{background:linear-gradient(135deg,#667eea,#764ba2)}
+  .meal-icon.snack{background:linear-gradient(135deg,#f093fb,#f5576c)}
+  .meal-title-wrap{flex:1}
+  .meal-title{font-size:14px;font-weight:600}
+  .meal-macros-badges{display:flex;gap:5px;margin-top:5px}
+  .badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px}
+  .badge.p{background:rgba(63,185,80,.18);color:var(--green)}
+  .badge.c{background:rgba(0,212,255,.18);color:var(--cyan)}
+  .badge.f{background:rgba(248,81,73,.18);color:var(--red)}
+  .meal-kcal{font-size:14px;font-weight:700;color:var(--yellow);background:rgba(227,179,65,.12);padding:4px 9px;border-radius:7px}
+  .meal-foods{border-top:1px solid var(--border);padding:0 14px 10px}
+  .food-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+  .food-row:last-child{border-bottom:none}
+  .food-name{font-size:13px}
+  .food-amount{font-size:13px;font-weight:600;color:var(--muted)}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+
+  /* ════════════════════════════
+     ΠΡΟΠΟΝΗΣΗ
+  ════════════════════════════ */
+  .day-tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .day-tabs::-webkit-scrollbar{display:none}
+  .wtab{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+  .wtab.active{color:#fff}
+
+  .day-done-banner{display:none;background:rgba(63,185,80,.12);border:1px solid var(--green);border-radius:10px;padding:14px;text-align:center;color:var(--green);font-weight:600;font-size:14px;margin-bottom:14px}
+  .day-done-banner.show{display:block}
+  .day-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .day-title{font-size:18px;font-weight:700}
+  .day-prog-txt{font-size:12px;color:var(--muted)}
+  .w-progress-bg{height:4px;background:var(--surface2);border-radius:99px;margin-bottom:16px}
+  .w-progress-fg{height:100%;border-radius:99px;transition:width .4s}
+
+  .exercise-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden}
+  .exercise-header{display:flex;align-items:center;gap:8px;padding:11px 13px;cursor:pointer;user-select:none}
+  .exercise-header:hover{background:var(--surface2)}
+  .ex-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;transition:all .15s}
+  .ex-check.done{background:var(--green);border-color:var(--green);color:#fff}
+  .ex-check.partial{background:var(--yellow);border-color:var(--yellow);color:#000}
+  .ex-name{flex:1;font-size:14px;font-weight:600}
+  .ex-sets-sum{font-size:11px;color:var(--muted)}
+  .ex-chevron{color:var(--muted);font-size:11px;transition:transform .2s}
+  .exercise-card.open .ex-chevron{transform:rotate(180deg)}
+  .sets-body{display:none;border-top:1px solid var(--border)}
+  .exercise-card.open .sets-body{display:block}
+  .sets-head{display:grid;grid-template-columns:24px 1fr 1fr 1fr 34px;gap:6px;padding:5px 13px 3px;border-bottom:1px solid var(--border)}
+  .sets-head span{font-size:10px;color:var(--muted);text-align:center}
+  .sets-head span:nth-child(2){text-align:left}
+  .set-row{display:grid;grid-template-columns:24px 1fr 1fr 1fr 34px;align-items:center;gap:6px;padding:7px 13px;border-bottom:1px solid var(--border)}
+  .set-row:last-child{border-bottom:none}
+  .set-row.completed{opacity:.55}
+  .set-num{font-size:11px;color:var(--muted);font-weight:600;text-align:center}
+  .set-lbl{font-size:12px;color:var(--muted)}
+  .set-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:5px 4px;width:100%;text-align:center;outline:none}
+  .set-input:focus{border-color:var(--accent)}
+  .set-done-btn{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .set-done-btn:hover{border-color:var(--green);color:var(--green)}
+  .set-done-btn.done{background:var(--green);border-color:var(--green);color:#fff}
+  .note-row{padding:7px 13px 9px;font-size:11px;color:var(--orange);font-style:italic;border-top:1px solid var(--border)}
+  .reset-day-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:5px 12px;font-size:11px;cursor:pointer}
+  .reset-day-btn:hover{border-color:var(--red);color:var(--red)}
 </style>
 </head>
 <body>
-  <h1>💪 Mike's Fitness</h1>
-  <p>Επίλεξε τι θέλεις να δεις</p>
-  <div class="cards">
-    <a href="index_tracker.html" class="meals">
-      <div class="icon">🥗</div>
-      <div class="label">Διατροφή</div>
-      <div class="sub">Γεύματα & macros</div>
-    </a>
-    <a href="workout.html" class="workout">
-      <div class="icon">🏋️</div>
-      <div class="label">Προπόνηση</div>
-      <div class="sub">PUSH · PULL · LEGS · UPPER</div>
-    </a>
+
+<div class="topbar">
+  <div class="topbar-title" id="topbar-title">🥗 Διατροφή</div>
+  <div class="topbar-right" id="topbar-right"></div>
+</div>
+
+<!-- ── PAGES ── -->
+<main>
+  <!-- ΔΙΑΤΡΟΦΗ -->
+  <div class="page active" id="page-diet">
+    <div class="date-nav">
+      <button id="prev-day">‹</button>
+      <span id="date-label"></span>
+      <button id="next-day">›</button>
+    </div>
+    <div id="diet-content"></div>
   </div>
+
+  <!-- ΠΡΟΠΟΝΗΣΗ -->
+  <div class="page" id="page-workout">
+    <div class="day-tabs" id="wtabs"></div>
+    <div id="workout-content"></div>
+  </div>
+</main>
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-diet" onclick="showPage('diet')">
+    <span class="nav-icon">🥗</span>Διατροφή
+  </button>
+  <button class="nav-btn" id="nav-workout" onclick="showPage('workout')">
+    <span class="nav-icon">🏋️</span>Προπόνηση
+  </button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ══════════════════════════════════════
+   GLOBALS
+══════════════════════════════════════ */
+const SUPABASE_URL = 'https://ezujjualnaymadpjjkom.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6dWpqdWFsbmF5bWFkcGpqa29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjAyOTYsImV4cCI6MjEwMzM5NjI5Nn0.swZqGIJwrW0QgnbnftCsBcV3snYJbRS-IIh744499nc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const GOALS = { kcal:1800, protein:160, carbs:140, fat:67 };
+const MEAL_LABELS = { breakfast:'Πρωινό', lunch:'Μεσημεριανό', dinner:'Βραδινό', snack:'Σνακ' };
+const MEAL_ICONS  = { breakfast:'🌅', lunch:'☀️', dinner:'🌙', snack:'🍎' };
+const MEAL_ORDER  = ['breakfast','lunch','snack','dinner'];
+
+let activePage = 'diet';
+let dietChannel = null;
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+function showPage(p) {
+  activePage = p;
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.getElementById('nav-' + p).classList.add('active');
+  const titles = { diet:'🥗 Διατροφή', workout:'🏋️ Προπόνηση' };
+  document.getElementById('topbar-title').textContent = titles[p];
+  if (p === 'workout') { document.getElementById('topbar-right').innerHTML = '<button class="reset-day-btn" onclick="resetWorkoutDay()">Reset ημέρας</button>'; }
+  else { document.getElementById('topbar-right').innerHTML = ''; }
+}
+
+/* ══════════════════════════════════════
+   ΔΙΑΤΡΟΦΗ
+══════════════════════════════════════ */
+let currentDate = new Date(); currentDate.setHours(0,0,0,0);
+
+function toDateStr(d){ return d.toISOString().slice(0,10); }
+function formatDateLabel(d){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const diff=(d-today)/86400000;
+  if(diff===0) return 'Σήμερα';
+  if(diff===-1) return 'Χθες';
+  return d.toLocaleDateString('el-GR',{weekday:'short',day:'numeric',month:'short'});
+}
+function updateDateLabel(){
+  document.getElementById('date-label').textContent = formatDateLabel(currentDate);
+  const today=new Date(); today.setHours(0,0,0,0);
+  document.getElementById('next-day').disabled = currentDate >= today;
+}
+document.getElementById('prev-day').onclick = () => { currentDate.setDate(currentDate.getDate()-1); updateDateLabel(); loadDiet(); };
+document.getElementById('next-day').onclick  = () => { const t=new Date();t.setHours(0,0,0,0); if(currentDate<t){currentDate.setDate(currentDate.getDate()+1);updateDateLabel();loadDiet();} };
+
+function parseNotes(notes){
+  if(!notes) return [];
+  return notes.split(',').map(s=>s.trim()).filter(Boolean).map(item=>{
+    const m=item.match(/^(\d+(?:\.\d+)?)g\s+(.+)$/);
+    return m ? {amount:m[1]+'g',name:m[2]} : {amount:'',name:item};
+  });
+}
+function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderDiet(meals){
+  const totals = meals.reduce((a,m)=>({
+    kcal:a.kcal+(m.kcal||0),
+    protein:a.protein+parseFloat(m.protein_g||0),
+    carbs:a.carbs+parseFloat(m.carbs_g||0),
+    fat:a.fat+parseFloat(m.fat_g||0)
+  }),{kcal:0,protein:0,carbs:0,fat:0});
+  const pct=(v,g)=>Math.min(100,Math.round(v/g*100));
+
+  const grouped={};
+  for(const m of meals){ const t=m.meal_type||'snack'; if(!grouped[t])grouped[t]=[]; grouped[t].push(m); }
+  const types=[...MEAL_ORDER.filter(t=>grouped[t]),...Object.keys(grouped).filter(t=>!MEAL_ORDER.includes(t))];
+
+  let mealHtml='';
+  for(const type of types){
+    const items=grouped[type];
+    const mt=items.reduce((a,m)=>({kcal:a.kcal+(m.kcal||0),p:a.p+parseFloat(m.protein_g||0),c:a.c+parseFloat(m.carbs_g||0),f:a.f+parseFloat(m.fat_g||0)}),{kcal:0,p:0,c:0,f:0});
+    let foodsHtml='';
+    for(const m of items){
+      const foods=parseNotes(m.notes);
+      if(foods.length>0){
+        for(const food of foods) foodsHtml+=`<div class="food-row"><div class="food-name">${esc(food.name)}</div><div class="food-amount">${esc(food.amount)}</div></div>`;
+      } else {
+        foodsHtml+=`<div class="food-row"><div class="food-name">${esc(m.description||type)}</div><div class="food-amount">${m.kcal} kcal</div></div>`;
+      }
+    }
+    mealHtml+=`
+      <div class="meal-card">
+        <div class="meal-card-header">
+          <div class="meal-icon ${type}">${MEAL_ICONS[type]||'🍽️'}</div>
+          <div class="meal-title-wrap">
+            <div class="meal-title">${MEAL_LABELS[type]||type}</div>
+            <div class="meal-macros-badges">
+              <span class="badge p">P: ${Math.round(mt.p)}g</span>
+              <span class="badge c">C: ${Math.round(mt.c)}g</span>
+              <span class="badge f">F: ${Math.round(mt.f)}g</span>
+            </div>
+          </div>
+          <div class="meal-kcal">${mt.kcal} kcal</div>
+        </div>
+        <div class="meal-foods">${foodsHtml}</div>
+      </div>`;
+  }
+  if(!types.length) mealHtml=`<div class="empty-state">Δεν έχεις καταχωρήσει γεύματα για αυτή τη μέρα.</div>`;
+
+  document.getElementById('diet-content').innerHTML=`
+    <div class="daily-summary">
+      <div class="summary-label">Ημερήσια Σύνολα</div>
+      <div class="macros-row">
+        <div class="macro-cell"><div class="macro-val kcal">${Math.round(totals.kcal)}</div><div class="macro-unit">kcal</div><div class="macro-name">Θερμίδες</div></div>
+        <div class="macro-cell"><div class="macro-val protein">${Math.round(totals.protein)}</div><div class="macro-unit">g</div><div class="macro-name">Πρωτεΐνη</div></div>
+        <div class="macro-cell"><div class="macro-val carbs">${Math.round(totals.carbs)}</div><div class="macro-unit">g</div><div class="macro-name">Υδατ/κες</div></div>
+        <div class="macro-cell"><div class="macro-val fat">${Math.round(totals.fat)}</div><div class="macro-unit">g</div><div class="macro-name">Λίπος</div></div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-row"><div class="progress-name">Πρωτεΐνη</div><div class="progress-bar-bg"><div class="progress-bar-fg protein" style="width:${pct(totals.protein,GOALS.protein)}%"></div></div><div class="progress-val">${Math.round(totals.protein)}/${GOALS.protein}g</div></div>
+        <div class="progress-row"><div class="progress-name">Υδατάνθρακες</div><div class="progress-bar-bg"><div class="progress-bar-fg carbs" style="width:${pct(totals.carbs,GOALS.carbs)}%"></div></div><div class="progress-val">${Math.round(totals.carbs)}/${GOALS.carbs}g</div></div>
+        <div class="progress-row"><div class="progress-name">Λίπος</div><div class="progress-bar-bg"><div class="progress-bar-fg fat" style="width:${pct(totals.fat,GOALS.fat)}%"></div></div><div class="progress-val">${Math.round(totals.fat)}/${GOALS.fat}g</div></div>
+      </div>
+      <div class="goals-line">Στόχος: <strong>${GOALS.kcal} kcal</strong> · <strong>${GOALS.protein}g P</strong> · <strong>${GOALS.carbs}g C</strong> · <strong>${GOALS.fat}g F</strong></div>
+    </div>
+    ${mealHtml}`;
+}
+
+async function loadDiet(){
+  const {data} = await sb.from('meals').select('*').eq('meal_date',toDateStr(currentDate)).order('logged_at');
+  renderDiet(data||[]);
+}
+
+function subscribeDiet(){
+  if(dietChannel) return;
+  dietChannel = sb.channel('meals-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'meals'},()=>loadDiet())
+    .subscribe();
+}
+
+/* ══════════════════════════════════════
+   ΠΡΟΠΟΝΗΣΗ
+══════════════════════════════════════ */
+const WDAYS = [
+  { id:'push', label:'PUSH', color:'#f78166', exercises:[
+    { name:'Chest Press μπάρα', sets:[{l:'Warm-up',kg:85,r:'5'},{l:'Set 1',kg:82.5,r:'5'},{l:'Set 2',kg:82.5,r:'5'},{l:'Set 3',kg:82.5,r:'5'}] },
+    { name:'Incline Smith Press', note:'1 θέση πάνω · rest 25" drop at 30 and fail', sets:[{l:'Set 1',kg:50,r:'8-10'},{l:'Set 2',kg:50,r:'8-10'},{l:'Set 3',kg:47.5,r:'10-12'},{l:'Drop',kg:40,r:'12'}] },
+    { name:'Lateral Raises DB', note:'Drop at 5 and do 15', sets:[{l:'Set 1',kg:12.5,r:'10-12'},{l:'Set 2',kg:7.5,r:'15-20'},{l:'Set 3',kg:15,r:'8-10'}] },
+    { name:'Dips', sets:[{l:'Set 1',kg:15,r:'8'},{l:'Set 2',kg:15,r:'8'},{l:'Set 3',kg:15,r:'8'},{l:'BW',kg:0,r:'20'}] },
+    { name:'Scale Crashers', sets:[{l:'Set 1',kg:30,r:'12'},{l:'Set 2',kg:35,r:'10'},{l:'Set 3',kg:40,r:'8'},{l:'Set 4',kg:40,r:'8'}] },
+    { name:'Tricep Pushdowns (rope)', sets:[{l:'Set 1',kg:45,r:'8'},{l:'Set 2',kg:40,r:'10-12'},{l:'Set 3',kg:30,r:'15'}] },
+    { name:'ABS Machine', note:'📸 Στείλε φωτό για οδηγίες', sets:[{l:'Set 1',kg:0,r:'–'}] },
+  ]},
+  { id:'pull', label:'PULL', color:'#58a6ff', exercises:[
+    { name:'Pull Ups (κανονική λαβή)', sets:[{l:'Set 1',kg:20,r:'5-7'},{l:'Set 2',kg:20,r:'5-7'},{l:'Set 3',kg:20,r:'5-7'}] },
+    { name:'Lat Pulldown', sets:[{l:'Set 1',kg:65,r:'12'},{l:'Set 2',kg:65,r:'12'}] },
+    { name:'Deficit Bent Over Row', sets:[{l:'Set 1',kg:70,r:'8'},{l:'Set 2',kg:55,r:'12'},{l:'Set 3',kg:40,r:'15'}] },
+    { name:'T-Bar Row machine', note:'Rest 25" · ίδιο βάρος μέχρι fail', sets:[{l:'Set 1',kg:60,r:'8-10'},{l:'Set 2',kg:50,r:'10-12'},{l:'Set 3',kg:40,r:'15'}] },
+    { name:'Straight Bar Curls', note:'Superset: αδειάζεις μπάρα → ανάποδη λαβή μέχρι fail', sets:[{l:'Set 1',kg:32.5,r:'8-10'},{l:'Set 2',kg:25,r:'12-15'},{l:'Set 3',kg:20,r:'12'},{l:'Set 4',kg:20,r:'12'}] },
+    { name:'Cable Hammer Curl (σχοινί)', sets:[{l:'Set 1',kg:45,r:'10-12'},{l:'Set 2',kg:40,r:'15'},{l:'Set 3',kg:35,r:'20'}] },
+    { name:'Wrist Plate Curls', sets:[{l:'Set 1',kg:10,r:'FAIL'},{l:'Set 2',kg:10,r:'FAIL'}] },
+    { name:'Reverse Wrist Curls DB', sets:[{l:'Set 1',kg:5,r:'FAIL'},{l:'Set 2',kg:5,r:'FAIL'}] },
+    { name:'Chin Ups', sets:[{l:'BW',kg:0,r:'15'}] },
+    { name:'Ραχιαίοι μηχάνημα', sets:[{l:'Set 1',kg:0,r:'15'},{l:'Set 2',kg:0,r:'15'}] },
+  ]},
+  { id:'legs', label:'LEGS', color:'#3fb950', exercises:[
+    { name:'Απαγωγοί', sets:[{l:'Set 1',kg:55,r:'12-15'},{l:'Set 2',kg:50,r:'FAIL'}] },
+    { name:'Smith Squats', note:'το έχουμε;;;', sets:[{l:'Set 1',kg:70,r:'6-8'},{l:'Set 2',kg:80,r:'5-7'},{l:'Set 3',kg:90,r:'5-7'},{l:'Set 4',kg:90,r:'5-7'},{l:'Set 5',kg:90,r:'5-7'}] },
+    { name:'Calf Raises Smith', sets:[{l:'Set 1',kg:60,r:'10-12'},{l:'Set 2',kg:50,r:'15-20'},{l:'BW',kg:0,r:'FAIL'}] },
+    { name:'Leg Extension', sets:[{l:'Set 1',kg:60,r:'8-10'},{l:'Set 2',kg:60,r:'8-10'},{l:'Set 3',kg:40,r:'12-15'},{l:'Set 4',kg:30,r:'20'}] },
+    { name:'RDL DB', sets:[{l:'Set 1',kg:35,r:'8-10'},{l:'Set 2',kg:30,r:'12-15'},{l:'Set 3',kg:22.5,r:'15-20'}] },
+    { name:'GHD Sit Ups', sets:[{l:'Set 1',kg:0,r:'FAIL'},{l:'Set 2',kg:0,r:'FAIL'}] },
+  ]},
+  { id:'upper', label:'UPPER', color:'#bc8cff', exercises:[
+    { name:'Smith Shoulder Press', sets:[{l:'Set 1',kg:45,r:'6-8'},{l:'Set 2',kg:50,r:'6-8'},{l:'Set 3',kg:55,r:'5'},{l:'Set 4',kg:57.5,r:'5'},{l:'Back-off',kg:30,r:'15'}] },
+    { name:'Lat Pulldown (μικρή λαβή)', sets:[{l:'Set 1',kg:80,r:'8-10'},{l:'Set 2',kg:75,r:'10-12'},{l:'Set 3',kg:65,r:'15'}] },
+    { name:'Incline DB Press', note:'1 θέση πάνω', sets:[{l:'Set 1',kg:25,r:'8-10'},{l:'Set 2',kg:22.5,r:'10-12'},{l:'Set 3',kg:17.5,r:'15'}] },
+    { name:'Deadlift', sets:[{l:'Set 1',kg:100,r:'5'},{l:'Set 2',kg:105,r:'3'},{l:'Back-off',kg:85,r:'6-8'}] },
+    { name:'DB Curls (καλή περιστροφή)', sets:[{l:'Set 1',kg:20,r:'8-10'},{l:'Set 2',kg:17.5,r:'12-15'},{l:'Set 3',kg:12.5,r:'FAIL'}] },
+    { name:'Tricep Pushdowns (straight bar)', sets:[{l:'Set 1',kg:40,r:'10-12'},{l:'Set 2',kg:35,r:'12-15'},{l:'Set 3',kg:25,r:'20'}] },
+  ]},
+];
+
+let activeWDay = 0;
+function wKey(id){ return 'w_'+id; }
+function wLoad(id){ try{return JSON.parse(localStorage.getItem(wKey(id)))||{};}catch{return{};} }
+function wSave(id,s){ try{localStorage.setItem(wKey(id),JSON.stringify(s));}catch{} }
+
+function renderWTabs(){
+  document.getElementById('wtabs').innerHTML = WDAYS.map((d,i)=>`
+    <div class="wtab ${i===activeWDay?'active':''}" onclick="switchWDay(${i})"
+      style="${i===activeWDay?`background:${d.color};border-color:${d.color};`:''}">
+      ${d.label}</div>`).join('');
+}
+
+function renderWorkout(){
+  const day=WDAYS[activeWDay], state=wLoad(day.id);
+  let total=0,done=0;
+  day.exercises.forEach((ex,ei)=>ex.sets.forEach((_,si)=>{ total++; if(state[`${ei}_${si}_done`])done++; }));
+  const pct=total?Math.round(done/total*100):0;
+  const allDone=done===total&&total>0;
+
+  let html=`
+    <div class="day-done-banner ${allDone?'show':''}">🎉 Προπόνηση ολοκληρωμένη!</div>
+    <div class="day-header">
+      <div class="day-title" style="color:${day.color}">${day.label}</div>
+      <div class="day-prog-txt">${done}/${total} sets</div>
+    </div>
+    <div class="w-progress-bg"><div class="w-progress-fg" style="width:${pct}%;background:${day.color}"></div></div>`;
+
+  day.exercises.forEach((ex,ei)=>{
+    const sd=ex.sets.filter((_,si)=>state[`${ei}_${si}_done`]).length;
+    const allEx=sd===ex.sets.length, partEx=sd>0&&!allEx;
+    const isOpen=state[`${ei}_open`]!==false&&!allEx;
+    html+=`
+      <div class="exercise-card ${isOpen?'open':''}" id="wex-${ei}">
+        <div class="exercise-header" onclick="wToggleEx(${ei})">
+          <div class="ex-check ${allEx?'done':partEx?'partial':''}">${allEx?'✓':partEx?sd:''}</div>
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-sets-sum">${sd}/${ex.sets.length}</div>
+          <div class="ex-chevron">▼</div>
+        </div>
+        <div class="sets-body">
+          <div class="sets-head"><span>#</span><span>Set</span><span>Κιλά</span><span>Επαν.</span><span></span></div>`;
+    ex.sets.forEach((s,si)=>{
+      const d2=!!state[`${ei}_${si}_done`];
+      const kg=state[`${ei}_${si}_kg`]!==undefined?state[`${ei}_${si}_kg`]:s.kg;
+      const reps=state[`${ei}_${si}_reps`]!==undefined?state[`${ei}_${si}_reps`]:s.r;
+      html+=`
+          <div class="set-row ${d2?'completed':''}" id="wrow-${ei}-${si}">
+            <div class="set-num">${si+1}</div>
+            <div class="set-lbl">${s.l}</div>
+            <input class="set-input" value="${kg}" onchange="wUpdateField(${ei},${si},'kg',this.value)" ${d2?'disabled':''}>
+            <input class="set-input" value="${reps}" onchange="wUpdateField(${ei},${si},'reps',this.value)" ${d2?'disabled':''}>
+            <button class="set-done-btn ${d2?'done':''}" onclick="wToggleSet(${ei},${si})">✓</button>
+          </div>`;
+    });
+    if(ex.note) html+=`<div class="note-row">📌 ${ex.note}</div>`;
+    html+=`</div></div>`;
+  });
+
+  document.getElementById('workout-content').innerHTML=html;
+}
+
+function switchWDay(i){ activeWDay=i; renderWTabs(); renderWorkout(); window.scrollTo(0,0); }
+function wToggleEx(ei){
+  const day=WDAYS[activeWDay],state=wLoad(day.id);
+  state[`${ei}_open`]=!document.getElementById(`wex-${ei}`).classList.contains('open');
+  wSave(day.id,state); renderWorkout();
+}
+function wUpdateField(ei,si,f,v){ const d=WDAYS[activeWDay],s=wLoad(d.id); s[`${ei}_${si}_${f}`]=v; wSave(d.id,s); }
+function wToggleSet(ei,si){
+  const day=WDAYS[activeWDay],state=wLoad(day.id);
+  state[`${ei}_${si}_done`]=!state[`${ei}_${si}_done`];
+  if(day.exercises[ei].sets.every((_,i)=>state[`${ei}_${i}_done`])) state[`${ei}_open`]=false;
+  wSave(day.id,state); renderWorkout();
+}
+function resetWorkoutDay(){
+  const day=WDAYS[activeWDay];
+  if(confirm('Reset '+day.label+';')){ localStorage.removeItem(wKey(day.id)); renderWorkout(); }
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+updateDateLabel();
+loadDiet();
+subscribeDiet();
+renderWTabs();
+renderWorkout();
+</script>
 </body>
 </html>
